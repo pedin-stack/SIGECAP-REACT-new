@@ -1,0 +1,114 @@
+/* --- Painel de Usuários --- */
+.users-panel {
+  background-color: var(--surface-color);
+  border-radius: 12px;
+  padding: 25px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 25px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+  color: var(--text-primary);
+}
+
+/* --- Tabela de Usuários --- */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap; /* Evita quebra de linha em telas pequenas */
+}
+
+.users-table thead th {
+  text-align: left;
+  padding: 12px 15px;
+  color: var(--accent-color); /* Dourado no cabeçalho */
+  font-weight: 600;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.users-table tbody td {
+  padding: 15px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.users-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.users-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05); /* Efeito hover sutil */
+}
+
+.actions-cell {
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* --- Botões de Ação --- */
+.btn-action {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-edit {
+  background-color: transparent;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+}
+
+.btn-edit:hover {
+  background-color: var(--accent-color);
+  color: #000;
+}
+
+.btn-danger-custom {
+  background-color: transparent;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+}
+
+.btn-danger-custom:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* --- Modal Pequeno de Edição --- */
+.small-modal {
+  max-width: 400px !important; /* Força o tamanho pequeno */
+}
+
+.modal-form label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.modal-form input {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: white;
+  margin-bottom: 15px;
+}
+
+.modal-form input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}

@@ -1,0 +1,112 @@
+/* --- Cards de Opções (Grid Principal) --- */
+.option-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 30px;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.option-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent-color);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.card-icon {
+  font-size: 40px;
+  color: var(--accent-color);
+  margin-bottom: 20px;
+}
+
+.option-card h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.option-card p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* --- Tabelas (Reutilizável) --- */
+.table-custom {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-custom th {
+  background-color: rgba(255,255,255,0.05);
+  color: var(--accent-color);
+  padding: 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
+}
+
+.table-custom td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.table-custom tbody tr:hover {
+  background-color: rgba(255,255,255,0.02);
+}
+
+/* Badges de Status */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+.status-paid { background-color: rgba(25, 135, 84, 0.2); color: #198754; }
+.status-pending { background-color: rgba(255, 193, 7, 0.2); color: #ffc107; }
+.status-late { background-color: rgba(220, 53, 69, 0.2); color: #dc3545; }
+
+/* --- Ajustes dos Modais para Tamanhos Diferentes --- */
+/* Herda o .custom-modal do Events.css ou definimos aqui */
+.custom-modal {
+  background: var(--surface-color);
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  animation: fadeIn 0.3s ease;
+  
+  /* Padrão */
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Tamanhos Extras */
+.custom-modal.modal-lg { max-width: 800px; }
+.custom-modal.modal-xl { max-width: 1100px; }
+
+/* Selects e Inputs */
+.form-select-custom {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+  width: 100%;
+}
+.form-select-custom:focus {
+  border-color: var(--accent-color);
+  outline: none;
+}
