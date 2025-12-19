@@ -23,9 +23,6 @@ const Dashboard = () => {
         {/* Cabeçalho */}
         <header className="d-flex justify-content-between align-items-center mb-5">
           <h1 className="fw-bold text-white">Dashboard</h1>
-          <div>
-            <UserButton />
-          </div>
         </header>
 
         {/* Grid de Cards (Utilizando Bootstrap Grid System) */}

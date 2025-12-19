@@ -163,3 +163,78 @@
   background: #dc3545;
   color: white;
 }
+/* --- Estilos Gerais do Calendário (já existentes ou novos) --- */
+.fc {
+  background-color: var(--surface-color);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.fc-toolbar-title {
+  color: var(--text-primary) !important;
+}
+
+.fc-button {
+  background-color: var(--surface-color) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  text-transform: capitalize;
+}
+
+.fc-button-active {
+  background-color: var(--accent-color) !important;
+  color: #000 !important;
+  border-color: var(--accent-color) !important;
+}
+
+.fc-daygrid-day-number {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+/* --- CORREÇÃO PARA MOBILE (A Mágica acontece aqui) --- */
+@media (max-width: 768px) {
+  
+  /* 1. Arrumar o Cabeçalho (Toolbar) */
+  .fc .fc-toolbar {
+    flex-direction: column; /* Empilha os itens verticalmente */
+    gap: 15px; /* Espaço entre os botões e o título */
+    align-items: center;
+  }
+
+  .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    width: 100%; /* Ocupa a largura toda para centralizar */
+  }
+
+  /* 2. Diminuir o título do mês */
+  .fc .fc-toolbar-title {
+    font-size: 1.25rem !important; /* Texto menor */
+  }
+
+  /* 3. Ajustar a tabela de dias */
+  .fc .fc-view-harness {
+    min-height: 400px; /* Garante altura mínima */
+  }
+
+  /* Cabeçalho dos dias da semana (Dom, Seg...) */
+  .fc-col-header-cell-cushion {
+    font-size: 0.75rem; /* Fonte menor */
+    padding: 2px !important;
+  }
+
+  /* Números dos dias */
+  .fc-daygrid-day-number {
+    font-size: 0.8rem;
+    padding: 2px !important;
+  }
+
+  /* Ajuste no botão "Criar Evento" se ele for um elemento customizado fora do padrão */
+  .fc .fc-button {
+    padding: 6px 10px !important;
+    font-size: 0.85rem !important;
+  }
+}

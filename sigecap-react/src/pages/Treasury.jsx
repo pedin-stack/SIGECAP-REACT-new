@@ -59,7 +59,6 @@ const Treasury = () => {
         <header className="d-flex justify-content-between align-items-center mb-5">
           <h1 className="fw-bold text-white">Tesouraria</h1>
           <div>
-           <UserButton />
           </div>
         </header>
 

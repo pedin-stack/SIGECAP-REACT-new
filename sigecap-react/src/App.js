@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Events from './pages/Events';
 import Treasury from './pages/Treasury';
 import Users from './pages/Users';
+import Members from './pages/Members';
 
 const App = () => {
     return (
@@ -26,6 +27,7 @@ const App = () => {
                         <Route path="/events" element={<Events />} />
                         <Route path="/treasury" element={<Treasury />} />
                         <Route path="/users" element={<Users />} />
+                        <Route path="/members" element={<Members />} />
                     </Routes>
                 </main>
 
