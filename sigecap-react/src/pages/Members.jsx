@@ -6,7 +6,6 @@ import UserButton from '../components/UserButton';
 import '../App.css';
 import '../assets/css/Users.css';
 
-// --- ENUMS (CONSTANTES) ---
 const USER_TYPES = {
   DEMOLAY: "Demolay",
   SENIOR: "Senior",
@@ -86,13 +85,12 @@ const Members = () => {
   const [currentUser, setCurrentUser] = useState(initialFormState);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Carrega usuários do backend e atualiza o estado
   const loadUsers = async (page = 0, size = 100) => {
     try {
       const data = await UserService.findAll(page, size);
-      // data pode ser uma página com .content (Spring Page)
+    
       const rawList = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : []);
-      // mapear campos do backend para o formato usado na UI
+     
       const list = rawList.map((u) => ({
         id: u.id ?? u.personId ?? null,
         name: u.name || (u.person && u.person.name) || '',
@@ -103,8 +101,55 @@ const Members = () => {
         // status esperado na UI: 'ativo' / 'inativo'
         status: (u.active === true || u.active === 'true') ? 'ativo' : 'inativo',
         // occupation
-        // type: preferir userType.id quando disponível (para enviar userTypeId ao salvar)
-       type: u.userType || ''
+
+        // Normaliza o valor do tipo para a CHAVE usada no enum USER_TYPES (ex: 'DEMOLAY')
+       type: (() => {
+         const raw = u.userType;
+         if (!raw) return '';
+         // se já for string, tentar mapear para a key via label ou nome
+         if (typeof raw === 'string') {
+           const found = Object.entries(USER_TYPES).find(([, v]) => v.toLowerCase() === raw.toString().toLowerCase() ||
+             Object.keys(USER_TYPES).find((k) => k.toLowerCase() === raw.toString().toLowerCase())
+           );
+           if (found) return found[0];
+           // tentar encontrar por key diretamente
+           const asKey = Object.keys(USER_TYPES).find((k) => k.toLowerCase() === raw.toString().toLowerCase());
+           return asKey || raw;
+         }
+         // se for objeto, extrair descrição/nome/label
+         if (typeof raw === 'object') {
+           const desc = (raw.description || raw.typeName || raw.label || raw.name);
+           if (!desc) return raw.id ? String(raw.id) : JSON.stringify(raw);
+           const found = Object.entries(USER_TYPES).find(([, v]) => v.toLowerCase() === desc.toString().toLowerCase());
+           if (found) return found[0];
+           const asKey = Object.keys(USER_TYPES).find((k) => k.toLowerCase() === desc.toString().toLowerCase());
+           return asKey || desc;
+         }
+         return String(raw);
+       })(),
+       // Extrai/normaliza ocupação do userType (pode vir em userType.occupation ou u.occupation)
+       occupation: (() => {
+         const rawOcc = (u.userType && (u.userType.occupation || u.userType.description)) || u.occupation || u.occupationRole || null;
+         if (!rawOcc) return '';
+         // se for objeto, pegar campo occupation/label/description
+         if (typeof rawOcc === 'object') {
+           const val = rawOcc.occupation || rawOcc.label || rawOcc.description || rawOcc.name;
+           if (!val) return rawOcc.toString ? String(rawOcc) : '';
+           // tentar mapear por label ou key
+           const found = Object.entries(OCCUPATIONS).find(([, v]) => v.toLowerCase() === val.toString().toLowerCase());
+           if (found) return found[0];
+           const asKey = Object.keys(OCCUPATIONS).find((k) => k.toLowerCase() === val.toString().toLowerCase());
+           return asKey || val;
+         }
+         // se for string ou enum name/label
+         if (typeof rawOcc === 'string') {
+           const found = Object.entries(OCCUPATIONS).find(([, v]) => v.toLowerCase() === rawOcc.toString().toLowerCase());
+           if (found) return found[0];
+           const asKey = Object.keys(OCCUPATIONS).find((k) => k.toLowerCase() === rawOcc.toString().toLowerCase());
+           return asKey || rawOcc;
+         }
+         return String(rawOcc);
+       })()
       }));
       // eslint-disable-next-line no-console
       console.info('[Frontend] usuários carregados (mapeados):', list);
@@ -152,9 +197,17 @@ const Members = () => {
     setShowEditModal(true);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
-      setUsers(users.filter((user) => user.id !== id));
+  const handleDelete = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este usuário?')) return;
+    try {
+      await UserService.delete(id);
+      // remover da lista apenas após sucesso
+      setUsers((prev) => prev.filter((user) => user.id !== id));
+      alert('Membro excluído com sucesso.');
+    } catch (err) {
+      console.error('Erro ao deletar usuário com ID', id, err);
+      const backendMsg = err?.response?.data?.message || err?.message || 'Erro desconhecido';
+      alert('Erro ao excluir: ' + backendMsg);
     }
   };
 
@@ -163,27 +216,43 @@ const Members = () => {
     setCurrentUser({ ...currentUser, [name]: value });
   };
 
-  const resolveUserTypeId = (typeValue) => {
+ const resolveUserTypeId = (typeValue, occupationValue) => {
     if (!typeValue) return null;
-    const asNum = Number(typeValue);
-    if (!Number.isNaN(asNum)) return asNum;
-    // procurar por id como string
-    const byId = userTypes.find((t) => t.id?.toString() === typeValue?.toString());
-    if (byId) return Number(byId.id);
-    // procurar por label
-    const byLabel = userTypes.find((t) => (t.label || '').toString() === typeValue?.toString());
-    if (byLabel) return Number(byLabel.id);
+
+    const targetType = typeValue.toString().toLowerCase();
+  
+    let targetOcc = occupationValue ? occupationValue.toString() : '';
+    
+    const occupationEntry = Object.entries(OCCUPATIONS).find(([key, label]) => 
+        label.toLowerCase() === targetOcc.toLowerCase() || 
+        key.toLowerCase() === targetOcc.toLowerCase()
+    );
+
+    const occupationKey = occupationEntry ? occupationEntry[0].toLowerCase() : targetOcc.toLowerCase();
+
+    const found = userTypes.find((t) => {
  
-    const labelFromKey = USER_TYPES[typeValue];
-    if (labelFromKey) {
-      const byLabel2 = userTypes.find((t) => (t.label || '') === labelFromKey);
-      if (byLabel2) return Number(byLabel2.id);
-    }
-    return null;
+        const dbType = (t.description || t.typeName || '').toString().toLowerCase();
+        
+        // Verifica se 'description' bate '
+        const typeMatch = dbType === targetType; 
+
+        // Verifica se 'occupation' bate 
+        const dbOcc = (t.occupation || '').toString().toLowerCase();
+        const occMatch = dbOcc === occupationKey;
+
+        return typeMatch && occMatch;
+    });
+
+    return found ? found.id : null;
   };
 
   const getTypeLabel = (typeVal) => {
     if (!typeVal) return '';
+    // Se vier um objeto do backend, extrai uma string amigável
+    if (typeof typeVal === 'object') {
+      return typeVal.label || typeVal.typeName || typeVal.description || typeVal.name || JSON.stringify(typeVal);
+    }
     const asNum = Number(typeVal);
     if (!Number.isNaN(asNum)) {
       const found = userTypes.find((t) => Number(t.id) === asNum);
@@ -197,10 +266,20 @@ const Members = () => {
     return typeVal;
   };
 
+  const getOccupationLabel = (occ) => {
+    if (!occ) return '';
+    if (typeof occ === 'object') {
+      return occ.description || occ.occupation || occ.label || occ.name || JSON.stringify(occ);
+    }
+    return OCCUPATIONS[occ] || occ;
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      // PAYLOAD SIMPLIFICADO
+
+      const resolvedTypeId = resolveUserTypeId(currentUser.type);
+
       const payload = {
         name: currentUser.name,
         cpf: (currentUser.cpf || '').toString().replace(/\D/g, ''),
@@ -210,10 +289,12 @@ const Members = () => {
         password: currentUser.password,
         active: currentUser.status === 'ativo',
         occupation: currentUser.occupation,
-
-        // MUDANÇA AQUI: Enviamos a String direta (ex: "DEMOLAY")
-        // Certifique-se que currentUser.type contém "DEMOLAY", "MACOM", etc.
-        userType: currentUser.type
+     
+        userType: resolvedTypeId
+          ? { id: resolvedTypeId }
+          : (typeof currentUser.type === 'object'
+            ? currentUser.type
+            : { description: currentUser.type, occupation: currentUser.occupation }),
       };
 
       // Remove senha se estiver vazio na edição
@@ -305,7 +386,7 @@ const Members = () => {
                     <tr key={user.id}>
                       <td>{user.name}</td>
                       <td>{getTypeLabel(user.type)}</td>
-                      <td>{OCCUPATIONS[user.occupation] || user.occupation}</td>
+                      <td>{getOccupationLabel(user.occupation)}</td>
                       <td>
                         <span className={`badge ${user.status === 'ativo' ? 'bg-success' : 'bg-secondary'}`}>
                           {user.status === 'ativo' ? 'Ativo' : 'Inativo'}
