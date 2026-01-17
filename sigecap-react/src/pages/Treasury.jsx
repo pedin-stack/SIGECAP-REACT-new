@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../App.css';
 import '../assets/css/Treasury.css';
 import UserButton from '../components/UserButton';
+import FinancialMovementService from '../api/FinancialMovementService';
+import CashService from '../api/CashService';
 
 // Componente auxiliar para o Card de Opção
 const OptionCard = ({ title, description, icon, onClick }) => (
@@ -31,6 +33,55 @@ const Treasury = () => {
 
   // Estados de Formulário (Simples)
   const [movementType, setMovementType] = useState('entrada');
+  const [movementDescription, setMovementDescription] = useState('');
+  const [movementValue, setMovementValue] = useState('');
+  const [movementDate, setMovementDate] = useState('');
+  const [movementFile, setMovementFile] = useState(null);
+
+  const [movements, setMovements] = useState([]);
+  const [initialBalance, setInitialBalance] = useState('');
+  const [cash, setCash] = useState(null);
+
+  // calcula soma das movimentações (entradas positivas, saídas negativas)
+  const sumMovements = movements.reduce((acc, m) => {
+    const val = Number(m.value) || 0;
+    return acc + ((m.type === 'ENTRADA' || m.type === 'INCOMING') ? val : -val);
+  }, 0);
+  const computedTotal = (parseFloat(initialBalance) || 0) + sumMovements;
+  // se o backend fornece cash.total, usa ele; caso contrário usa o total calculado localmente
+  const displayedTotal = (cash && (cash.total !== null && cash.total !== undefined)) ? cash.total : computedTotal;
+  const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayedTotal);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const res = await FinancialMovementService.getAll();
+        const data = res.data;
+        const list = data && data.content ? data.content : data;
+        setMovements(list || []);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Erro ao carregar movimentações', err);
+      }
+    };
+    if (showBalanceModal) fetch();
+  }, [showBalanceModal]);
+
+  useEffect(() => {
+    const fetchCash = async () => {
+      try {
+        const res = await CashService.getCurrent();
+        setCash(res.data);
+        if (res.data && res.data.initialValue != null) {
+          setInitialBalance(String(res.data.initialValue));
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Erro ao carregar cash', err);
+      }
+    };
+    if (showBalanceModal) fetchCash();
+  }, [showBalanceModal]);
 
   // --- SVGs para os Cards (Substituindo FontAwesome) ---
   const iconExchange = (
@@ -100,10 +151,20 @@ const Treasury = () => {
             <div className="custom-modal">
               <h3 className="fw-bold text-white mb-4">Nova Movimentação</h3>
               <form>
-                <div className="form-group">
-                  <label>Nome/Objeto</label>
-                  <input type="text" placeholder="Ex: Materiais Filantropia" />
-                </div>
+                  <div className="form-group">
+                    <label>Nome/Objeto</label>
+                    <input type="text" placeholder="Ex: Materiais Filantropia" />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Descrição</label>
+                    <input
+                      type="text"
+                      placeholder="Descrição detalhada da movimentação"
+                      value={movementDescription}
+                      onChange={(e) => setMovementDescription(e.target.value)}
+                    />
+                  </div>
                 
                 <div className="form-group">
                    <label>Tipo</label>
@@ -123,20 +184,79 @@ const Treasury = () => {
                    <div className="col-6">
                       <div className="form-group">
                         <label>Valor (R$)</label>
-                        <input type="number" placeholder="0,00" step="0.01" />
+                        <input
+                          type="number"
+                          placeholder="0,00"
+                          step="0.01"
+                          value={movementValue}
+                          onChange={(e) => setMovementValue(e.target.value)}
+                        />
                       </div>
                    </div>
                    <div className="col-6">
                       <div className="form-group">
                         <label>Documento</label>
-                        <input type="file" className="form-control form-control-custom" />
+                        <input
+                          type="file"
+                          className="form-control form-control-custom"
+                          onChange={(e) => setMovementFile(e.target.files[0] || null)}
+                        />
                       </div>
                    </div>
                 </div>
 
                 <div className="modal-actions">
                   <button type="button" className="btn-cancel" onClick={() => setShowMovementModal(false)}>Cancelar</button>
-                  <button type="button" className="btn-confirm">Salvar</button>
+                  <button type="button" className="btn-confirm" onClick={async () => {
+                    try {
+                      if (movementFile) {
+                        const formData = new FormData();
+                        // use a different field name to avoid Spring trying to bind the MultipartFile
+                        formData.append('supportingFile', movementFile);
+                        formData.append('value', String(parseFloat(movementValue) || 0));
+                        formData.append('description', movementDescription || '');
+                        formData.append('date', movementDate ? new Date(movementDate).toISOString() : new Date().toISOString());
+                        formData.append('type', movementType === 'entrada' ? 'ENTRADA' : 'SAIDA');
+                        formData.append('responsibleId', String(1));
+
+                        await FinancialMovementService.createWithFile(formData);
+                      } else {
+                        const payload = {
+                          value: parseFloat(movementValue) || 0,
+                          description: movementDescription,
+                          date: movementDate ? new Date(movementDate).toISOString() : new Date().toISOString(),
+                          type: movementType === 'entrada' ? 'ENTRADA' : 'SAIDA',
+                          supportingDoc: movementFile ? movementFile.name : '',
+                          responsibleId: 1,
+                        };
+                        await FinancialMovementService.create(payload);
+                      }
+
+                      setShowMovementModal(false);
+                      setMovementDescription('');
+                      setMovementValue('');
+                      setMovementDate('');
+                      setMovementFile(null);
+                      // Atualiza lista caso o modal de balanço esteja aberto
+                      if (showBalanceModal) {
+                        const res = await FinancialMovementService.getAll();
+                        const data = res.data;
+                        const list = data && data.content ? data.content : data;
+                        setMovements(list || []);
+                        try {
+                          const cashRes = await CashService.getCurrent();
+                          setCash(cashRes.data);
+                        } catch (e) {
+                          // eslint-disable-next-line no-console
+                          console.error('Erro ao atualizar cash após salvar movimentação', e);
+                        }
+                      }
+                    } catch (err) {
+                      // eslint-disable-next-line no-console
+                      console.error('Erro ao salvar movimentação', err);
+                      alert('Erro ao salvar movimentação. Veja o console para detalhes.');
+                    }
+                  }}>Salvar</button>
                 </div>
               </form>
             </div>
@@ -230,34 +350,94 @@ const Treasury = () => {
         {showBalanceModal && (
           <div className="modal-overlay">
             <div className="custom-modal modal-lg">
-              <h3 className="fw-bold text-white mb-4">Balanço Recente</h3>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                   <h3 className="fw-bold text-white m-0">Balanço Recente</h3>
+                   <div className="d-flex align-items-center">
+                     <label className="me-2 text-white mb-0">Saldo Inicial</label>
+                     <input
+                       type="number"
+                       className="form-control form-control-custom"
+                       step="0.01"
+                       value={initialBalance}
+                       onChange={(e) => setInitialBalance(e.target.value)}
+                     />
+                     <button
+                       type="button"
+                       className="btn btn-confirm ms-2"
+                       onClick={async () => {
+                         try {
+                           const payload = { initialValue: Number(initialBalance) || 0 };
+                           let res;
+                           if (cash && cash.id) {
+                             res = await CashService.update(cash.id, payload);
+                           } else {
+                             res = await CashService.save(payload);
+                           }
+                           // eslint-disable-next-line no-console
+                           console.debug('Cash save/update response', res);
+                           if (res && res.data) {
+                             setCash(res.data);
+                             if (res.data && res.data.initialValue != null) setInitialBalance(String(res.data.initialValue));
+                             alert('Saldo inicial salvo com sucesso.');
+                           } else {
+                             const current = await CashService.getCurrent();
+                             setCash(current.data);
+                             if (current.data && current.data.initialValue != null) setInitialBalance(String(current.data.initialValue));
+                             alert('Saldo inicial salvo (fetch de confirmação).');
+                           }
+                         } catch (err) {
+                           // eslint-disable-next-line no-console
+                           console.error('Erro ao salvar cash', err);
+                           if (err.response) {
+                             alert(`Erro ao salvar saldo inicial: ${err.response.status} - ${err.response.data?.message || JSON.stringify(err.response.data)}`);
+                           } else {
+                             alert('Erro ao salvar saldo inicial. Veja o console para detalhes.');
+                           }
+                         }
+                       }}
+                     >Salvar</button>
+                   </div>
+                </div>
               <table className="table-custom">
                  <thead>
                     <tr>
                        <th>Data</th>
                        <th>Descrição</th>
+                        <th>Documento</th>
                        <th>Tipo</th>
                        <th>Valor</th>
                     </tr>
                  </thead>
                  <tbody>
-                    <tr>
-                       <td>01/10/2025</td>
-                       <td>Materiais Filantropia</td>
-                       <td><span className="text-danger">Saída</span></td>
-                       <td>R$ 150,00</td>
-                    </tr>
-                    <tr>
-                       <td>05/10/2025</td>
-                       <td>Mensalidade Pedro</td>
-                       <td><span className="text-success">Entrada</span></td>
-                       <td>R$ 30,00</td>
-                    </tr>
+                    {movements && movements.length > 0 ? (
+                      movements.map((m) => {
+                        const date = m.date ? new Date(m.date) : null;
+                        const dateStr = date ? date.toLocaleDateString() : '-';
+                        const typeLabel = m.type === 'ENTRADA' || m.type === 'INCOMING' ? 'Entrada' : 'Saída';
+                        const valueStr = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.value || 0);
+                        const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+                        const docUrl = m.supportingDoc ? (m.supportingDoc.startsWith('http') ? m.supportingDoc : `${apiBase}${m.supportingDoc}`) : null;
+                        return (
+                          <tr key={m.id || Math.random()}>
+                             <td>{dateStr}</td>
+                             <td>{m.description || '-'}</td>
+                             <td>{docUrl ? (<a href={docUrl} target="_blank" rel="noopener noreferrer">{m.supportingDoc}</a>) : '-'}</td>
+                             <td>{m.type === 'ENTRADA' || m.type === 'INCOMING' ? <span className="text-success">{typeLabel}</span> : <span className="text-danger">{typeLabel}</span>}</td>
+                             <td>{valueStr}</td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="4" style={{ textAlign: 'center' }}>Sem movimentações</td>
+                      </tr>
+                    )}
                  </tbody>
               </table>
-              <div className="modal-actions mt-4">
-                 <button className="btn-cancel" onClick={() => setShowBalanceModal(false)}>Fechar</button>
-              </div>
+                <div className="modal-actions mt-4 d-flex justify-content-between align-items-center">
+                  <div className="text-white"><strong>Total:</strong> {formattedTotal}</div>
+                  <button className="btn-cancel" onClick={() => setShowBalanceModal(false)}>Fechar</button>
+                </div>
             </div>
           </div>
         )}
