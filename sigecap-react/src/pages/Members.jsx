@@ -41,7 +41,7 @@ const OCCUPATIONS = {
 };
 
 // Componente auxiliar para os Cards
-const OptionCard = ({ title, description, icon, onClick, disabled }) => (
+  const OptionCard = ({ title, description, icon, onClick, disabled }) => (
   <div className="col-lg-6 col-md-6 mb-4">
     <div
       className={`option-card ${disabled ? 'disabled' : ''}`}
@@ -67,6 +67,12 @@ const Members = () => {
   const [userTypes, setUserTypes] = useState([]);
 
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAttendanceListModal, setShowAttendanceListModal] = useState(false);
+  const [attendanceEvents, setAttendanceEvents] = useState([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [selectedAttendanceEvent, setSelectedAttendanceEvent] = useState(null);
+  const [attendanceMembers, setAttendanceMembers] = useState([]);
+  const [attendanceMembersLoading, setAttendanceMembersLoading] = useState(false);
 
   // Estado inicial do formulário vazio
   const initialFormState = {
@@ -157,6 +163,74 @@ const Members = () => {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[Frontend] Erro ao carregar usuários:', err);
+    }
+  };
+
+  const loadAttendanceEvents = async () => {
+    setAttendanceLoading(true);
+    try {
+      // Reuse EventService to load events list
+      const ev = await import('../api/EventService');
+      const data = await ev.default.findAll(0, 200);
+      const list = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : []);
+      const mapped = list.map((e) => ({
+        id: e.id,
+        name: e.name || e.title || `Evento ${e.id}`,
+        date: e.date || e.startTime || null,
+        startTime: e.startTime || null,
+      }));
+      setAttendanceEvents(mapped);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Erro ao carregar eventos para lista de presença', err);
+      setAttendanceEvents([]);
+    } finally {
+      setAttendanceLoading(false);
+    }
+  };
+
+  const openAttendanceList = async () => {
+    await loadAttendanceEvents();
+    setShowAttendanceListModal(true);
+  };
+
+  const loadAttendanceMembers = async (eventId) => {
+    if (!eventId) return;
+    setAttendanceMembersLoading(true);
+    try {
+      // EventService.getAttendees returns attendances; we will filter and map
+      const ev = await import('../api/EventService');
+      const data = await ev.default.getAttendees(eventId);
+      const list = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : []);
+      // filter by eventId (controller might return all)
+      const filtered = (list || []).filter((a) => String(a.eventId) === String(eventId));
+      const members = (filtered || []).map((a) => ({
+        attendanceId: a.id,
+        memberId: a.memberId,
+        memberName: a.memberName || a.memberFullName || `Usuário ${a.memberId}`,
+        status: a.status,
+      }));
+      setAttendanceMembers(members);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Erro ao carregar membros confirmados', err);
+      setAttendanceMembers([]);
+    } finally {
+      setAttendanceMembersLoading(false);
+    }
+  };
+
+  const changeMemberStatus = async (attendanceId, eventId, memberId, newStatus) => {
+    try {
+      const AttendanceService = (await import('../api/AttendanceService')).default;
+      // PUT /attendances/{id} expects AttendanceRequestDTO: { eventId, memberId, status }
+      await AttendanceService.update(attendanceId, { eventId, memberId, status: newStatus });
+      // reload members
+      await loadAttendanceMembers(eventId);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Erro ao atualizar status da presença', err);
+      alert('Erro ao atualizar status. Veja console.');
     }
   };
 
@@ -351,8 +425,8 @@ const Members = () => {
                 title="Lista de Presença"
                 description="Controle de frequência em reuniões."
                 icon={iconCheck}
-                disabled={true}
-                onClick={() => { }}
+                disabled={false}
+                onClick={openAttendanceList}
               />
             </div>
           </section>
@@ -402,6 +476,95 @@ const Members = () => {
               </table>
             </div>
           </section>
+        )}
+
+        {showAttendanceListModal && (
+          <div className="modal-overlay">
+            <div className="custom-modal large-modal">
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h3 className="fw-bold text-white m-0">Lista de Presença</h3>
+                <button className="text-white bg-transparent border-0 fs-3" onClick={() => setShowAttendanceListModal(false)}>&times;</button>
+              </div>
+
+              <div className="table-responsive mb-3">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>Evento</th>
+                      <th>Data</th>
+                      <th>Horário</th>
+                      <th>Lista de membros</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendanceLoading ? (
+                      <tr><td colSpan="4">Carregando eventos...</td></tr>
+                    ) : (attendanceEvents && attendanceEvents.length > 0 ? (
+                      attendanceEvents.map((ev) => (
+                        <tr key={ev.id}>
+                          <td>{ev.name}</td>
+                          <td>{ev.date ? (new Date(ev.date)).toLocaleDateString('pt-BR') : '-'}</td>
+                          <td>{ev.startTime ? (new Date(ev.startTime)).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                          <td>
+                            <button className="btn btn-sm btn-outline-light" onClick={async () => { setSelectedAttendanceEvent(ev); await loadAttendanceMembers(ev.id); }}>
+                              Ver Lista
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="4">Nenhum evento encontrado.</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="d-flex justify-content-end">
+                <button className="btn-cancel" onClick={() => setShowAttendanceListModal(false)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal com lista de membros confirmados para um evento */}
+        {selectedAttendanceEvent && (
+          <div className="modal-overlay">
+            <div className="custom-modal">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="fw-bold text-white m-0">Membros Confirmados - {selectedAttendanceEvent.name}</h4>
+                <button className="text-white bg-transparent border-0 fs-3" onClick={() => { setSelectedAttendanceEvent(null); setAttendanceMembers([]); }}>&times;</button>
+              </div>
+
+              <div className="mb-3">
+                {attendanceMembersLoading ? (
+                  <div>Carregando membros...</div>
+                ) : (
+                  <ul className="text-custom-secondary small">
+                    {attendanceMembers && attendanceMembers.length > 0 ? (
+                      attendanceMembers.map((m) => (
+                        <li key={m.attendanceId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+                          <span style={{ color: m.status === 'PRESENT' ? '#28a745' : (m.status === 'ABSENT' ? '#dc3545' : '#ff9800') }}>{m.memberName}</span>
+                          <div>
+                            {m.status === 'PRESENT' ? (
+                              <button className="btn btn-sm btn-danger ms-2" onClick={() => changeMemberStatus(m.attendanceId, selectedAttendanceEvent.id, m.memberId, 'ABSENT')}>Ausente</button>
+                            ) : (
+                              <button className="btn btn-sm btn-success ms-2" onClick={() => changeMemberStatus(m.attendanceId, selectedAttendanceEvent.id, m.memberId, 'PRESENT')}>Presente</button>
+                            )}
+                          </div>
+                        </li>
+                      ))
+                    ) : (
+                      <div>Nenhum membro confirmado.</div>
+                    )}
+                  </ul>
+                )}
+              </div>
+
+              <div className="d-flex justify-content-end">
+                <button className="btn-cancel" onClick={() => { setSelectedAttendanceEvent(null); setAttendanceMembers([]); }}>Fechar</button>
+              </div>
+            </div>
+          </div>
         )}
 
         {showEditModal && (
