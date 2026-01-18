@@ -7,6 +7,7 @@ import '../App.css';
 import '../assets/css/Events.css';
 import UserButton from '../components/UserButton';
 import EventService from '../api/EventService';
+import AuthService from '../api/AuthService';
 
 const Events = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -55,6 +56,9 @@ const Events = () => {
     endTime: '',
     eventRole: ''
   });
+  const [attendees, setAttendees] = useState([]);
+  const [attendeesLoading, setAttendeesLoading] = useState(false);
+  const [userConfirmed, setUserConfirmed] = useState(false);
 
   // Estado do formulário de criação
   const [newEventData, setNewEventData] = useState({
@@ -181,6 +185,41 @@ const Events = () => {
     setShowDetailModal(false);
   };
 
+  const loadAttendees = async (eventId) => {
+    if (!eventId) return;
+    setAttendeesLoading(true);
+    try {
+      const data = await EventService.getAttendees(eventId);
+      // data pode ser array ou objeto com .content
+      const list = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : []);
+      // Backend retorna todas as attendances sem filtrar por eventId.
+      // Filtramos client-side para considerar apenas as participações deste evento.
+      const filtered = (list || []).filter((a) => String(a.eventId) === String(eventId));
+      // Mapear AttendanceResponseDTO -> attendee { attendanceId, memberId, memberName, status }
+      const attendeesList = (filtered || []).map((a) => ({
+        attendanceId: a.id,
+        memberId: a.memberId,
+        memberName: a.memberName || a.memberFullName || a.member || (`Usuário ${a.memberId}`),
+        status: a.status,
+      }));
+      setAttendees(attendeesList);
+      const currentUser = AuthService.getCurrentUser();
+      if (currentUser && attendeesList && attendeesList.length > 0) {
+        const found = attendeesList.some((u) => String(u.memberId) === String(currentUser.id));
+        setUserConfirmed(!!found);
+      } else {
+        setUserConfirmed(false);
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Erro ao carregar participantes do evento', err);
+      setAttendees([]);
+      setUserConfirmed(false);
+    } finally {
+      setAttendeesLoading(false);
+    }
+  };
+
   const handleUpdateEvent = async () => {
     if (!editEventData.title || !editEventData.date) {
       alert('Título e data são obrigatórios');
@@ -245,6 +284,13 @@ const Events = () => {
   const handleEventClick = (info) => {
     setSelectedEvent(info.event);
     setShowDetailModal(true);
+    // carregar lista de confirmados
+    try {
+      const id = info.event.id;
+      loadAttendees(id);
+    } catch (e) {
+      // ignore
+    }
   };
 
   // Excluir evento
@@ -389,9 +435,19 @@ const Events = () => {
                 <hr className="border-secondary" />
                 
                 <h5 className="text-custom-accent">Membros Confirmados</h5>
-                <ul className="text-custom-secondary small">
-                    <li>Carregando lista... (Fictício)</li>
-                </ul>
+                {attendeesLoading ? (
+                  <div className="text-custom-secondary small">Carregando lista...</div>
+                ) : (
+                  <ul className="text-custom-secondary small">
+                    {attendees && attendees.length > 0 ? (
+                      attendees.map((u) => (
+                        <li key={u.attendanceId}>{u.memberName}</li>
+                      ))
+                    ) : (
+                      <li>Nenhum membro confirmado ainda.</li>
+                    )}
+                  </ul>
+                )}
               </div>
 
               <div className="modal-actions justify-content-between w-100">
@@ -399,7 +455,10 @@ const Events = () => {
                   <button className="btn-edit" onClick={handleOpenEditModal}>Editar</button>
                   <button className="btn-delete ms-2" onClick={handleDeleteEventApi}>Deletar</button>
                 </div>
-                <button className="btn-cancel" onClick={() => setShowDetailModal(false)}>Fechar</button>
+                <div className="d-flex align-items-center gap-2">
+                  <ConfirmButton selectedEvent={selectedEvent} userConfirmed={userConfirmed} attendees={attendees} onConfirmed={() => loadAttendees(selectedEvent.id)} />
+                  <button className="btn-cancel" onClick={() => setShowDetailModal(false)}>Fechar</button>
+                </div>
               </div>
             </div>
           </div>
@@ -464,3 +523,52 @@ const Events = () => {
 };
 
 export default Events;
+
+// --- Componente ConfirmButton (no mesmo arquivo para simplicidade) ---
+function ConfirmButton({ selectedEvent, userConfirmed, attendees = [], onConfirmed }) {
+  const [loading, setLoading] = React.useState(false);
+  const currentUser = AuthService.getCurrentUser();
+
+  const handleClick = async () => {
+    if (!currentUser) {
+      alert('Você precisa estar logado para confirmar presença.');
+      return;
+    }
+    if (!selectedEvent) return;
+    setLoading(true);
+    try {
+      if (userConfirmed) {
+        // encontrar attendanceId do usuário
+        const entry = attendees.find((a) => String(a.memberId) === String(currentUser.id));
+        if (!entry || !entry.attendanceId) {
+          alert('Não foi possível localizar a presença para desmarcar.');
+          return;
+        }
+        await EventService.removeAttendance(entry.attendanceId);
+        if (onConfirmed) onConfirmed();
+        alert('Presença desmarcada.');
+      } else {
+        // confirmar presença
+        await EventService.confirmAttendance(selectedEvent.id, currentUser.id);
+        if (onConfirmed) onConfirmed();
+        alert('Presença confirmada.');
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Erro ao atualizar presença:', err);
+      alert('Erro ao processar presença. Veja console.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      className={`btn-confirm ${userConfirmed ? 'btn-confirm-desmarcar' : ''}`}
+      onClick={handleClick}
+      disabled={loading}
+    >
+      {loading ? (userConfirmed ? 'Processando...' : 'Confirmando...') : (userConfirmed ? 'Desmarcar presença' : 'Confirmar Presença')}
+    </button>
+  );
+}

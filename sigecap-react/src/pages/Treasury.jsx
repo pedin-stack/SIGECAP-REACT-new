@@ -42,6 +42,14 @@ const Treasury = () => {
   const [initialBalance, setInitialBalance] = useState('');
   const [cash, setCash] = useState(null);
 
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('currentUser') || 'null');
+    } catch (e) {
+      return null;
+    }
+  })();
+
   // calcula soma das movimentações (entradas positivas, saídas negativas)
   const sumMovements = movements.reduce((acc, m) => {
     const val = Number(m.value) || 0;
@@ -217,7 +225,7 @@ const Treasury = () => {
                         formData.append('description', movementDescription || '');
                         formData.append('date', movementDate ? new Date(movementDate).toISOString() : new Date().toISOString());
                         formData.append('type', movementType === 'entrada' ? 'ENTRADA' : 'SAIDA');
-                        formData.append('responsibleId', String(1));
+                        formData.append('responsibleId', String(currentUser?.id || 1));
 
                         await FinancialMovementService.createWithFile(formData);
                       } else {
@@ -227,7 +235,7 @@ const Treasury = () => {
                           date: movementDate ? new Date(movementDate).toISOString() : new Date().toISOString(),
                           type: movementType === 'entrada' ? 'ENTRADA' : 'SAIDA',
                           supportingDoc: movementFile ? movementFile.name : '',
-                          responsibleId: 1,
+                          responsibleId: currentUser?.id || 1,
                         };
                         await FinancialMovementService.create(payload);
                       }

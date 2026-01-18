@@ -24,6 +24,41 @@ const EventService = {
     }
   },
 
+  // Lista de participações para um evento usando o controller /attendances
+  getAttendees: async (eventId) => {
+    try {
+      const response = await api.get('/attendances', { params: { eventId, size: 500 } });
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao buscar participações do evento ${eventId}:`, error);
+      throw error;
+    }
+  },
+
+  // Confirmar presença: cria uma Attendance via POST /attendances
+  // envia AttendanceRequestDTO { eventId, memberId, status }
+  confirmAttendance: async (eventId, userId, status = 'PRESENT') => {
+    try {
+      const body = { eventId, memberId: userId, status };
+      const response = await api.post('/attendances', body);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao confirmar presença no evento ${eventId}:`, error);
+      throw error;
+    }
+  },
+
+  // Remover uma participação (desmarcar presença)
+  removeAttendance: async (attendanceId) => {
+    try {
+      const response = await api.delete(`/attendances/${attendanceId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao remover participação ${attendanceId}:`, error);
+      throw error;
+    }
+  },
+
   save: async (eventData) => {
     try {
       const response = await api.post(`${BASE_URL}`, eventData);
