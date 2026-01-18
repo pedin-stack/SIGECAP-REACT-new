@@ -21,6 +21,20 @@ api.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
+// Optional: attach Authorization header when authToken exists
+api.interceptors.request.use((config) => {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    } catch (e) {
+        // ignore
+    }
+    return config;
+}, (error) => Promise.reject(error));
+
 // Log responses for debugging
 api.interceptors.response.use((response) => {
     // eslint-disable-next-line no-console
