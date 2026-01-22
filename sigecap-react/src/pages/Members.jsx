@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import UserService from '../api/UserService';
 import * as UserTypeService from '../api/UserTypeService';
 import Sidebar from '../components/Sidebar';
-import UserButton from '../components/UserButton';
 import '../App.css';
 import '../assets/css/Users.css';
 
