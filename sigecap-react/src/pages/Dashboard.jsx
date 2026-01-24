@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import StatCard from '../components/StatCard';
+import StatCard from '../components/OptionCard';
 import Sidebar from '../components/Sidebar';
 import '../App.css'; 
+import OptionCard from '../components/StatCard';
 
 const Dashboard = () => {
 
@@ -28,7 +29,7 @@ const Dashboard = () => {
         <div className="row g-4">
           
           <div className="col-12 col-md-6 col-lg-4">
-            <StatCard 
+            <OptionCard
               title="Próximos Eventos"
               value="Evento nome"
               footer="Data: 20/12/2025"
@@ -37,7 +38,7 @@ const Dashboard = () => {
 
           {/* Card 2: Saldo */}
           <div className="col-12 col-md-6 col-lg-4">
-            <StatCard 
+            <OptionCard 
               title="Saldo em Caixa"
               value="R$ 1.250,00"
               isMoney={true}
@@ -47,7 +48,7 @@ const Dashboard = () => {
 
           {/* Card 3: Avisos */}
           <div className="col-12 col-md-6 col-lg-4">
-            <StatCard 
+            <OptionCard 
               title="Último Aviso"
               value="*Aviso Importante*"
               footer="Enviado por: Mestre Conselheiro"

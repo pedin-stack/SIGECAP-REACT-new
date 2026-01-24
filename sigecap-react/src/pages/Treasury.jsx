@@ -12,23 +12,14 @@ import DuesModal from '../components/modals/treasury/DuesModal';
 import ManualDuesModal from '../components/modals/treasury/ManualDuesModal';
 import BalanceModal from '../components/modals/treasury/BalanceModal';
 import ReportsModal from '../components/modals/treasury/ReportsModal';
+import OptionCard from '../components/OptionCard';
 
 // Modais Genéricos (Sucesso/Erro)
 import SuccessModal from '../components/modals/successModal';
 import ExceptionModal from '../components/modals/errorModal';
+import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 
-// Componente visual simples para os cards
-const OptionCard = ({ title, description, icon, onClick }) => (
-  <div className="col-lg-4 col-md-6">
-    <div className="option-card" onClick={onClick}>
-      <div className="card-icon">{icon}</div>
-      <div className="card-content">
-        <h2>{title}</h2>
-        <p>{description}</p>
-      </div>
-    </div>
-  </div>
-);
+
 
 const Treasury = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -42,7 +33,14 @@ const Treasury = () => {
     movements,
     cash,
     loading,
+    selectedMovement,
     handleCreateMovement,
+    handleOpenEditMovement,
+    handleDeleteMovement,
+    openConfirmDelete,
+    confirmDelete,
+    closeConfirmDelete,
+    confirmDeleteAction,
     handleSaveInitialBalance
   } = useTreasury();
 
@@ -67,7 +65,7 @@ const Treasury = () => {
               title="Registrar Movimentação" 
               description="Adicione novas entradas ou saídas no caixa." 
               icon={iconExchange} 
-              onClick={() => toggleModal('movement', true)} 
+              onClick={() => handleOpenEditMovement(null)} 
             />
             <OptionCard 
               title="Gestão de Mensalidades" 
@@ -90,14 +88,6 @@ const Treasury = () => {
           </div>
         </section>
 
-        {/* --- MODAIS DE DOMÍNIO --- */}
-        <MovementModal 
-          isOpen={modals.movement} 
-          onClose={() => toggleModal('movement', false)} 
-          onSave={handleCreateMovement}
-          loading={loading}
-        />
-
         <DuesModal 
           isOpen={modals.dues} 
           onClose={() => toggleModal('dues', false)} 
@@ -109,17 +99,35 @@ const Treasury = () => {
           onClose={() => toggleModal('manualDues', false)} 
         />
 
-        <BalanceModal 
-          isOpen={modals.balance} 
-          onClose={() => toggleModal('balance', false)}
-          movements={movements}
-          cash={cash}
-          onSaveInitialBalance={handleSaveInitialBalance}
-        />
+          <BalanceModal 
+            isOpen={modals.balance} 
+            onClose={() => toggleModal('balance', false)}
+            movements={movements}
+            cash={cash} 
+            onEditMovement={handleOpenEditMovement}
+             onDeleteMovement={openConfirmDelete}
+            onSaveInitialBalance={handleSaveInitialBalance}
+          />
+
+          <ConfirmDeleteModal
+            isOpen={confirmDelete.isOpen}
+            onClose={closeConfirmDelete}
+            onConfirm={confirmDeleteAction}
+            title="Excluir movimentação"
+            message={confirmDelete.movement ? `Deseja excluir a movimentação "${confirmDelete.movement.description || ''}" no valor de R$ ${confirmDelete.movement.value || ''}?` : undefined}
+          />
 
         <ReportsModal 
           isOpen={modals.reports} 
           onClose={() => toggleModal('reports', false)} 
+        />
+
+        <MovementModal 
+          isOpen={modals.movement} 
+          onClose={() => toggleModal('movement', false)} 
+          onSave={handleCreateMovement}
+          loading={loading}
+          initialData={selectedMovement}
         />
 
         {/* --- MODAIS DE FEEDBACK (SUCESSO/ERRO) --- */}
