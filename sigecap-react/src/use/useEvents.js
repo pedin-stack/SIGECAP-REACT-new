@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import EventService from '../api/EventService';
 import AuthService from '../api/AuthService';
+import AttendanceService from '../api/AttendanceService';
 
-export const useEvents = () => {
+const useEvents = () => {
   // --- Estados de Dados ---
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -16,19 +17,20 @@ export const useEvents = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // --- Estados de Modais de Feedback (Sucesso/Erro) ---
+  // --- Estados de Modais de Feedback ---
   const [errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
   const [successModal, setSuccessModal] = useState({ isOpen: false, message: '' });
 
   // --- Formulários ---
-  const [newEventData, setNewEventData] = useState({ title: '', date: '', startTime: '', endTime: '', eventRole: '' });
+  // Removi a necessidade de preencher eventRole manualmente na criação
+  const [newEventData, setNewEventData] = useState({ title: '', date: '', startTime: '', endTime: '' });
   const [editEventData, setEditEventData] = useState({ id: null, title: '', date: '', startTime: '', endTime: '', eventRole: '' });
 
-  // --- Helpers de Data ---
+  // --- Helpers ---
   const toDateString = (d) => {
     if (!d) return '';
     const dt = (d instanceof Date) ? d : new Date(d);
-    return dt.toISOString().split('T')[0]; // YYYY-MM-DD
+    return dt.toISOString().split('T')[0];
   };
 
   const toTimeString = (d) => {
@@ -44,14 +46,27 @@ export const useEvents = () => {
     try {
       const data = await EventService.findAll(0, 100);
       const list = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : []);
-      const mapped = list.map((e) => ({
+      
+      // Filtra eventos cancelados caso o backend retorne eles
+      const activeEvents = list.filter(e => e.eventRole !== 'CANCELLED');
+
+      const mapped = activeEvents.map((e) => ({
+        // Campos para Calendário
         id: e.id ? String(e.id) : Date.now().toString(),
         title: e.name || '',
         start: e.startTime || e.date || null,
         end: e.endTime || null,
         allDay: !(e.startTime || e.endTime),
-        extendedProps: { eventRole: e.eventRole } 
+        // O eventRole agora serve apenas para LEITURA (mudar cor, exibir badge, etc)
+        extendedProps: { eventRole: e.eventRole },
+
+        // Campos Originais para Lista
+        name: e.name,
+        date: e.date,
+        startTime: e.startTime,
+        endTime: e.endTime
       }));
+      
       setEvents(mapped);
     } catch (err) {
       console.error(err);
@@ -98,14 +113,25 @@ export const useEvents = () => {
     }
   }, []);
 
-  // --- Ações do CRUD ---
+  // --- Atualizar Status de Presença ---
+  const updateAttendanceStatus = async (attendanceId, eventId, memberId, newStatus) => {
+    try {
+      await AttendanceService.update(attendanceId, { eventId, memberId, status: newStatus });
+      await loadAttendees(eventId);
+    } catch (err) {
+      console.error(err);
+      setErrorModal({ isOpen: true, message: 'Erro ao atualizar status da presença.' });
+    }
+  };
 
+  // --- Ações do CRUD de Eventos ---
+  
   const handleCreateEvent = async () => {
-    if (!newEventData.title || !newEventData.date || !newEventData.eventRole) {
-      setErrorModal({ isOpen: true, message: 'Preencha título, data e status.' });
+    // REMOVIDO: Verificação de eventRole. O backend define como SCHEDULED.
+    if (!newEventData.title || !newEventData.date) {
+      setErrorModal({ isOpen: true, message: 'Preencha título e data.' });
       return;
     }
-
     let start = newEventData.date;
     let end = newEventData.date;
     if (newEventData.startTime) start = `${newEventData.date}T${newEventData.startTime}`;
@@ -116,7 +142,7 @@ export const useEvents = () => {
       date: newEventData.startTime ? start : `${newEventData.date}T00:00:00`,
       startTime: newEventData.startTime ? start : null,
       endTime: newEventData.endTime ? end : null,
-      eventRole: newEventData.eventRole,
+      // REMOVIDO: eventRole não é enviado, o backend define.
       eventPics: ''
     };
 
@@ -132,11 +158,11 @@ export const useEvents = () => {
   };
 
   const handleUpdateEvent = async () => {
-    if (!editEventData.title || !editEventData.date || !editEventData.eventRole) {
+    // REMOVIDO: Verificação de eventRole
+    if (!editEventData.title || !editEventData.date) {
       setErrorModal({ isOpen: true, message: 'Campos obrigatórios faltando.' });
       return;
     }
-    
     let start = editEventData.date;
     let end = editEventData.date;
     if (editEventData.startTime) start = `${editEventData.date}T${editEventData.startTime}`;
@@ -147,7 +173,8 @@ export const useEvents = () => {
       date: editEventData.startTime ? start : `${editEventData.date}T00:00:00`,
       startTime: editEventData.startTime ? start : null,
       endTime: editEventData.endTime ? end : null,
-      eventRole: editEventData.eventRole,
+      // REMOVIDO: eventRole. O Scheduler do backend vai recalcular o status 
+      // baseado na nova data/hora que estamos enviando aqui.
       eventPics: ''
     };
 
@@ -167,6 +194,7 @@ export const useEvents = () => {
     if (!window.confirm(`Apagar "${selectedEvent.title}"?`)) return;
 
     try {
+      // O Backend agora faz "Soft Delete" (Muda status para CANCELLED)
       await EventService.remove(selectedEvent.id);
       setSuccessModal({ isOpen: true, message: 'Evento removido.' });
       setShowDetailModal(false);
@@ -181,18 +209,15 @@ export const useEvents = () => {
   const toggleAttendance = async () => {
     const currentUser = AuthService.getCurrentUser();
     if (!currentUser || !selectedEvent) return;
-    
     setAttendanceLoading(true);
     try {
       if (userConfirmed) {
-        // Desmarcar
         const entry = attendees.find((a) => String(a.memberId) === String(currentUser.id));
         if (entry?.attendanceId) {
           await EventService.removeAttendance(entry.attendanceId);
           setSuccessModal({ isOpen: true, message: 'Presença cancelada.' });
         }
       } else {
-        // Confirmar
         await EventService.confirmAttendance(selectedEvent.id, currentUser.id);
         setSuccessModal({ isOpen: true, message: 'Presença confirmada!' });
       }
@@ -207,7 +232,8 @@ export const useEvents = () => {
 
   // --- Manipuladores de UI ---
   const openCreateModal = () => {
-    setNewEventData({ title: '', date: '', startTime: '', endTime: '', eventRole: '' });
+    // Reset sem eventRole
+    setNewEventData({ title: '', date: '', startTime: '', endTime: '' });
     setShowCreateModal(true);
   };
 
@@ -219,6 +245,7 @@ export const useEvents = () => {
       date: toDateString(selectedEvent.start),
       startTime: toTimeString(selectedEvent.start),
       endTime: toTimeString(selectedEvent.end),
+      // Mantemos aqui apenas para EXIBIÇÃO se você tiver um campo "Status" disabled no form
       eventRole: selectedEvent.extendedProps?.eventRole || ''
     });
     setShowDetailModal(false);
@@ -232,7 +259,6 @@ export const useEvents = () => {
   };
 
   return {
-    // Dados
     events,
     selectedEvent,
     attendees,
@@ -244,12 +270,12 @@ export const useEvents = () => {
     newEventData, setNewEventData,
     editEventData, setEditEventData,
 
-    // Controle de Modais UI
+    // Controle UI
     showCreateModal, setShowCreateModal, openCreateModal,
     showEditModal, setShowEditModal, openEditModal,
     showDetailModal, setShowDetailModal,
     
-    // Modais Feedback
+    // Feedback
     errorModal, setErrorModal,
     successModal, setSuccessModal,
 
@@ -258,6 +284,12 @@ export const useEvents = () => {
     handleUpdateEvent,
     handleDeleteEvent,
     toggleAttendance,
-    onEventClick
+    onEventClick,
+
+    fetchEvents: loadEvents,
+    fetchAttendees: loadAttendees,
+    updateAttendanceStatus
   };
 };
+
+export default useEvents;

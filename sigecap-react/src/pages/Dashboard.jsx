@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import StatCard from '../components/StatCard';
 import Sidebar from '../components/Sidebar';
 import '../App.css'; 
-import UserButton from '../components/UserButton';
 
 const Dashboard = () => {
 
@@ -28,7 +27,6 @@ const Dashboard = () => {
         {/* Grid de Cards (Utilizando Bootstrap Grid System) */}
         <div className="row g-4">
           
-          {/* Card 1: Eventos */}
           <div className="col-12 col-md-6 col-lg-4">
             <StatCard 
               title="Próximos Eventos"

@@ -15,8 +15,7 @@ import EventDetailModal from '../components/modals/eventModal/EventDetailModal';
 import ExceptionModal from '../components/modals/errorModal'; 
 import SuccessModal from '../components/modals/successModal';  
 
-// Hook Lógico
-import { useEvents } from '../use/useEvents';
+import  useEvents  from '../use/useEvents';
 
 const Events = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -120,7 +119,7 @@ const Events = () => {
           onToggleAttendance={toggleAttendance}
         />
 
-        {/* --- MODAIS DE FEEDBACK (Ao final, como solicitado) --- */}
+        {/* --- MODAIS DE FEEDBACK */}
         <ExceptionModal 
           isOpen={errorModal.isOpen} 
           onClose={() => setErrorModal({ ...errorModal, isOpen: false })} 

@@ -27,19 +27,6 @@ const CreateEventModal = ({ isOpen, onClose, data, setData, onSave }) => {
           />
         </div>
 
-        <div className="form-group">
-          <label>Status</label>
-          <select
-            value={data.eventRole}
-            onChange={(e) => setData({ ...data, eventRole: e.target.value })}
-          >
-            <option value="">Selecione...</option>
-            <option value="SCHEDULED">Agendado</option>
-            <option value="IN_COURSE">Acontecendo</option>
-            <option value="FINISHED">Finalizado</option>
-          </select>
-        </div>
-
         <div className="row">
           <div className="col-6">
             <div className="form-group">

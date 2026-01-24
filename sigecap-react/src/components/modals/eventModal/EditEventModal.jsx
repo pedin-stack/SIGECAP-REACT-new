@@ -55,20 +55,6 @@ const EditEventModal = ({ isOpen, onClose, data, setData, onSave }) => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Status</label>
-            <select
-              value={data.eventRole}
-              onChange={(e) => setData({ ...data, eventRole: e.target.value })}
-              required
-            >
-              <option value="">Selecione...</option>
-              <option value="SCHEDULED">Agendado</option>
-              <option value="IN_COURSE">Acontecendo</option>
-              <option value="FINISHED">Finalizado</option>
-            </select>
-          </div>
-
           <div className="d-flex justify-content-end gap-2 mt-4">
             <button type="button" className="btn btn-outline-secondary text-white" onClick={onClose}>Cancelar</button>
             <button type="submit" className="btn btn-custom fw-bold">Salvar Alterações</button>
