@@ -19,6 +19,8 @@ export const useTreasury = () => {
 
   const [movements, setMovements] = useState([]);
   const [cash, setCash] = useState(null);
+  const [selectedMovement, setSelectedMovement] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, movement: null });
   const [loading, setLoading] = useState(false);
 
   // Recuperar usuário atual
@@ -73,32 +75,63 @@ export const useTreasury = () => {
   const handleCreateMovement = async (movementData) => {
     setLoading(true);
     try {
-      const { file, value, description, date, type } = movementData;
+      const { id, file, value, description, date, type } = movementData;
 
-      if (file) {
-        const formData = new FormData();
-        formData.append('supportingFile', file);
-        formData.append('value', String(parseFloat(value) || 0));
-        formData.append('description', description || '');
-        formData.append('date', date ? new Date(date).toISOString() : new Date().toISOString());
-        formData.append('type', type === 'entrada' ? 'ENTRADA' : 'SAIDA');
-        formData.append('responsibleId', String(currentUser?.id || 1));
+      // Monta dados comuns
+      const parsedType = (type === 'entrada' || type === 'ENTRADA' || type === 'INCOMING') ? 'ENTRADA' : 'SAIDA';
 
-        await FinancialMovementService.createWithFile(formData);
+      if (id) {
+        // Atualização
+        if (file) {
+          const formData = new FormData();
+          formData.append('supportingFile', file);
+          formData.append('value', String(parseFloat(value) || 0));
+          formData.append('description', description || '');
+          formData.append('date', date ? new Date(date).toISOString() : new Date().toISOString());
+          formData.append('type', parsedType);
+          formData.append('responsibleId', String(currentUser?.id || 1));
+
+          await FinancialMovementService.updateWithFile(id, formData);
+        } else {
+          const payload = {
+            value: parseFloat(value) || 0,
+            description: description,
+            date: date ? new Date(date).toISOString() : new Date().toISOString(),
+            type: parsedType,
+            // Mantém o campo supportingDoc atual quando não há novo arquivo enviado
+            supportingDoc: movementData.supportingDoc || '',
+            responsibleId: currentUser?.id || 1,
+          };
+          await FinancialMovementService.update(id, payload);
+        }
       } else {
-        const payload = {
-          value: parseFloat(value) || 0,
-          description: description,
-          date: date ? new Date(date).toISOString() : new Date().toISOString(),
-          type: type === 'entrada' ? 'ENTRADA' : 'SAIDA',
-          supportingDoc: '',
-          responsibleId: currentUser?.id || 1,
-        };
-        await FinancialMovementService.create(payload);
+        // Criação
+        if (file) {
+          const formData = new FormData();
+          formData.append('supportingFile', file);
+          formData.append('value', String(parseFloat(value) || 0));
+          formData.append('description', description || '');
+          formData.append('date', date ? new Date(date).toISOString() : new Date().toISOString());
+          formData.append('type', parsedType);
+          formData.append('responsibleId', String(currentUser?.id || 1));
+
+          await FinancialMovementService.createWithFile(formData);
+        } else {
+          const payload = {
+            value: parseFloat(value) || 0,
+            description: description,
+            date: date ? new Date(date).toISOString() : new Date().toISOString(),
+            type: parsedType,
+            supportingDoc: '',
+            responsibleId: currentUser?.id || 1,
+          };
+          await FinancialMovementService.create(payload);
+        }
       }
 
       // Sucesso
       toggleModal('movement', false);
+      setSelectedMovement(null);
       setFeedback(prev => ({ ...prev, success: { isOpen: true, message: 'Movimentação registrada com sucesso!' } }));
 
       if (modals.balance) {
@@ -112,6 +145,48 @@ export const useTreasury = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Abrir modal para edição de movimentação
+  const handleOpenEditMovement = (movement) => {
+    setSelectedMovement(movement);
+    toggleModal('movement', true);
+  };
+
+  // Abrir confirmação de exclusão
+  const openConfirmDelete = (movement) => {
+    setConfirmDelete({ isOpen: true, movement });
+  };
+
+  const closeConfirmDelete = () => {
+    setConfirmDelete({ isOpen: false, movement: null });
+  };
+
+  // Excluir movimentação
+  const handleDeleteMovement = async (id) => {
+    try {
+      setLoading(true);
+      await FinancialMovementService.delete(id);
+      setFeedback(prev => ({ ...prev, success: { isOpen: true, message: 'Movimentação excluída com sucesso.' } }));
+      // Recarrega
+      if (modals.balance) {
+        fetchMovements();
+        fetchCash();
+      }
+    } catch (err) {
+      console.error(err);
+      setFeedback(prev => ({ ...prev, error: { isOpen: true, message: 'Erro ao excluir movimentação.' } }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirmação que usa handleDeleteMovement
+  const confirmDeleteAction = async () => {
+    if (!confirmDelete.movement) return;
+    const id = confirmDelete.movement.id;
+    closeConfirmDelete();
+    await handleDeleteMovement(id);
   };
 
   // --- Salvar Saldo Inicial ---
@@ -144,7 +219,14 @@ export const useTreasury = () => {
     movements,
     cash,
     loading,
+    selectedMovement,
     handleCreateMovement,
+    handleOpenEditMovement,
+    handleDeleteMovement,
+    openConfirmDelete,
+    closeConfirmDelete,
+    confirmDelete,
+    confirmDeleteAction,
     handleSaveInitialBalance
   };
 };

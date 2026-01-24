@@ -113,9 +113,6 @@
   border-color: var(--accent-color);
 }
 
-/* ... (mantenha o código anterior da tabela e modal) ... */
-
-/* --- Estilos dos Cartões de Opção (Idêntico à Tesouraria) --- */
 .users-options .row {
   margin-top: 20px;
 }

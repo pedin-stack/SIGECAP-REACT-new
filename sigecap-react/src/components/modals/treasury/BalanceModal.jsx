@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
-const BalanceModal = ({ isOpen, onClose, movements, cash, onSaveInitialBalance }) => {
+
+const BalanceModal = ({ 
+  isOpen, 
+  onClose, 
+  movements, 
+  cash, 
+  onSaveInitialBalance,
+  onEditMovement,   
+  onDeleteMovement  
+}) => {
   const [initialBalance, setInitialBalance] = useState('');
 
-  // Sincroniza o input com o valor vindo da API (cash)
+
   useEffect(() => {
     if (cash && cash.initialValue != null) {
       setInitialBalance(String(cash.initialValue));
@@ -11,22 +20,16 @@ const BalanceModal = ({ isOpen, onClose, movements, cash, onSaveInitialBalance }
   }, [cash]);
 
   if (!isOpen) return null;
-
-  // --- Cálculos de Totais ---
-  const sumMovements = movements.reduce((acc, m) => {
-    const val = Number(m.value) || 0;
-    return acc + ((m.type === 'ENTRADA' || m.type === 'INCOMING') ? val : -val);
-  }, 0);
-
-  const computedTotal = (parseFloat(initialBalance) || 0) + sumMovements;
-  
-  // Prioriza o total que vem do backend se existir, senão usa o calculado
-  const displayedTotal = (cash && (cash.total !== null && cash.total !== undefined)) ? cash.total : computedTotal;
-  const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayedTotal);
+  // --- Total vindo do backend ---
+  const backendTotal = (cash && (cash.total !== null && cash.total !== undefined)) ? Number(cash.total) : null;
+  const formattedTotal = backendTotal !== null
+    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(backendTotal)
+    : '-';
 
   return (
     <div className="modal-overlay">
-      <div className="custom-modal modal-lg">
+      {/* Usei modal-xl para garantir espaço extra para os botões */}
+      <div className="custom-modal modal-xl">
         
         {/* Cabeçalho do Modal e Input de Saldo Inicial */}
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -40,6 +43,7 @@ const BalanceModal = ({ isOpen, onClose, movements, cash, onSaveInitialBalance }
                step="0.01"
                value={initialBalance}
                onChange={(e) => setInitialBalance(e.target.value)}
+               style={{ width: '150px' }}
              />
              <button 
                type="button" 
@@ -53,14 +57,15 @@ const BalanceModal = ({ isOpen, onClose, movements, cash, onSaveInitialBalance }
 
         {/* Tabela */}
         <div className="table-responsive">
-          <table className="table-custom">
+          <table className="table-custom w-100">
              <thead>
                 <tr>
                    <th>Data</th>
                    <th>Descrição</th>
-                   <th>Documento</th> {/* Coluna Reinserida */}
+                   <th>Documento</th>
                    <th>Tipo</th>
                    <th>Valor</th>
+                   <th className="text-end pe-3">Ações</th> {/* Nova Coluna */}
                 </tr>
              </thead>
              <tbody>
@@ -80,31 +85,52 @@ const BalanceModal = ({ isOpen, onClose, movements, cash, onSaveInitialBalance }
 
                    return (
                      <tr key={m.id || Math.random()}>
-                        <td>{dateStr}</td>
-                        <td>{m.description || '-'}</td>
+                        <td className="align-middle">{dateStr}</td>
+                        <td className="align-middle">{m.description || '-'}</td>
                         
                         {/* Célula de Documento */}
-                        <td>
+                        <td className="align-middle">
                           {docUrl ? (
-                            <a href={docUrl} target="_blank" rel="noopener noreferrer">
-                              {m.supportingDoc}
+                            <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-info text-decoration-none">
+                              <i className="bi bi-file-earmark-text me-1"></i> Ver Doc
                             </a>
                           ) : '-'}
                         </td>
 
-                        <td>
+                        <td className="align-middle">
                           {m.type === 'ENTRADA' || m.type === 'INCOMING' 
-                            ? <span className="text-success">{typeLabel}</span> 
-                            : <span className="text-danger">{typeLabel}</span>
+                            ? <span className="text-success fw-bold">{typeLabel}</span> 
+                            : <span className="text-danger fw-bold">{typeLabel}</span>
                           }
                         </td>
-                        <td>{valueStr}</td>
+                        <td className="align-middle">{valueStr}</td>
+                        
+                        {/* --- NOVA COLUNA DE AÇÕES --- */}
+                        <td className="text-end">
+                            <div className="d-flex justify-content-end gap-2">
+                                <button 
+                                  className="btn btn-sm btn-outline-warning text-white" 
+                                  onClick={() => onEditMovement && onEditMovement(m)}
+                                  title="Editar"
+                                >
+                                  Editar
+                                </button>
+                                <button 
+                                  className="btn btn-sm btn-outline-danger" 
+                                  onClick={() => onDeleteMovement && onDeleteMovement(m)}
+                                  title="Excluir"
+                                >
+                                  Excluir
+                                </button>
+                            </div>
+                        </td>
+
                      </tr>
                    );
                  })
                ) : (
                  <tr>
-                    <td colSpan="5" style={{ textAlign: 'center' }}>Sem movimentações</td>
+                    <td colSpan="6" className="text-center py-4 text-muted">Sem movimentações recentes</td>
                  </tr>
                )}
              </tbody>
@@ -112,8 +138,10 @@ const BalanceModal = ({ isOpen, onClose, movements, cash, onSaveInitialBalance }
         </div>
 
         {/* Rodapé com Total */}
-        <div className="modal-actions mt-4 d-flex justify-content-between align-items-center">
-          <div className="text-white"><strong>Total:</strong> {formattedTotal}</div>
+        <div className="modal-actions mt-4 d-flex justify-content-between align-items-center border-top border-secondary pt-3">
+          <div className="text-white fs-5">
+            <strong>Total:</strong> <span className={backendTotal !== null ? (backendTotal >= 0 ? 'text-success' : 'text-danger') : 'text-secondary'}>{formattedTotal}</span>
+          </div>
           <button className="btn-cancel" onClick={onClose}>Fechar</button>
         </div>
 

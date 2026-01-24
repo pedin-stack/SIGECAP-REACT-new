@@ -13,7 +13,7 @@ import Members from './pages/Members';
 const App = () => {
     return (
         <Router>
-            {/* Estrutura Flexbox para rodapé fixo */}
+         
             <div className="d-flex flex-column min-vh-100 bg-light">
                 
                 {/*<Header /> fixo no topo */}
@@ -31,7 +31,7 @@ const App = () => {
                     </Routes>
                 </main>
 
-                {/* Footer <Footer /> fixo na base */}
+               
     
             </div>
         </Router>
