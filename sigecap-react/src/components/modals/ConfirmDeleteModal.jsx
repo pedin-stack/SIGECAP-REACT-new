@@ -1,4 +1,11 @@
 import React from 'react';
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton,
+  EditButton,
+  ActionButton
+} from '../buttons/Buttons';
 
 const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
@@ -20,9 +27,9 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, title, message }) => {
           <h5 className="fw-bold text-white mb-2">{title || 'Confirmar exclusão'}</h5>
           <p className="text-custom-secondary mb-4">{message || 'Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.'}</p>
 
-          <div className="d-flex justify-content-between gap-2 mt-auto">
-            <button className="btn btn-secondary w-50" onClick={onClose}>Cancelar</button>
-            <button className="btn btn-delete w-50" onClick={onConfirm}>Excluir</button>
+          <div className="d-flex justify-content-center gap-2">
+            <CancelButton onClick={onClose} label="Cancelar" />
+            <ExcludeButton onClick={onConfirm} label="Excluir" />
           </div>
         </div>
       </div>

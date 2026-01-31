@@ -1,4 +1,7 @@
 import React from 'react';
+import { 
+  ActionButton
+} from '../buttons/Buttons';
 
 const SuccessModal = ({ isOpen, onClose, message }) => {
 
@@ -38,22 +41,7 @@ const SuccessModal = ({ isOpen, onClose, message }) => {
             </p>
           </div>
 
-          <button 
-            onClick={onClose}
-            className="btn btn-custom fw-bold"
-            style={{ 
-              width: '80%', 
-              height: '50px', 
-              borderRadius: '8px',
-              fontSize: '1rem',
-              textTransform: 'uppercase',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            OK
-          </button>
+         <ActionButton onClick={onClose} label="Fechar" />
 
         </div>
       </div>

@@ -1,7 +1,10 @@
 
+import { 
+  CancelButton,
+} from '../buttons/Buttons';
 
 const ErrorModal = ({ isOpen, onClose, message }) => {
-
+  
   if (!isOpen) return null;
 
   return (
@@ -37,23 +40,7 @@ const ErrorModal = ({ isOpen, onClose, message }) => {
             </p>
           </div>
 
-          <button 
-            onClick={onClose}
-            className="btn btn-custom fw-bold"
-            style={{ 
-              width: '80%', 
-              height: '50px', 
-              borderRadius: '8px',
-              fontSize: '1rem',
-              textTransform: 'uppercase',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            OK
-          </button>
-
+         <CancelButton onClick={onClose} label="Fechar" />
         </div>
       </div>
     </div>

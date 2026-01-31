@@ -1,4 +1,7 @@
 import React from 'react';
+import { 
+  ActionButton
+} from '../../buttons/Buttons';
 
 const StatusModal = ({ isOpen, onClose, type, message }) => {
   if (!isOpen) return null;
@@ -17,9 +20,7 @@ const StatusModal = ({ isOpen, onClose, type, message }) => {
         </div>
         <h4 className="fw-bold text-white mb-2">{isSuccess ? 'Sucesso!' : 'Erro!'}</h4>
         <p className="text-white mb-4">{message}</p>
-        <button className="btn-confirm w-100" onClick={onClose}>
-            OK
-        </button>
+        <ActionButton onClick={onClose} label="Fechar" />
       </div>
     </div>
   );
