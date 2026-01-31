@@ -1,0 +1,73 @@
+/* Estilos para a tela de Objetivos - segue tema do projeto */
+.objectives-modal .table thead th {
+  background: rgba(255,255,255,0.03);
+  color: var(--accent-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.objective-row td {
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+
+.objective-progress {
+  height: 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.objective-progress > .bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+}
+
+.objective-actions .btn {
+  min-width: 86px;
+}
+
+.objective-card-header {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+
+.objective-amount {
+  font-weight:700; color:var(--text-primary);
+}
+
+/* Hover leve para linha */
+.table.table-striped tbody tr:hover {
+  background-color: rgba(212,175,55,0.03);
+}
+
+/* Força o background das tabelas dentro do modal de objetivos seguir o tema escuro */
+.objectives-modal .table {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+.objectives-modal .table thead th {
+  background: rgba(255,255,255,0.03) !important;
+  color: var(--accent-color) !important;
+}
+.objectives-modal .table tbody tr {
+  background: transparent !important;
+}
+.objectives-modal .table.table-striped tbody tr:nth-of-type(odd) td {
+  background-color: rgba(255,255,255,0.02) !important;
+}
+.objectives-modal .table.table-striped tbody tr:nth-of-type(even) td {
+  background-color: transparent !important;
+}
+.objectives-modal .table td, .objectives-modal .table th {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* keep modal behind contribution modal when both open */
+.objectives-modal { z-index: 1045; }
+
+/* Animação de entrada leve para o modal */
+.animate-fade-in { animation: fadeIn 0.25s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
