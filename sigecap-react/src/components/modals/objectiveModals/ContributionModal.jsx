@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  CreateButton,  
-  ExcludeButton, 
+  CreateButton,   
   CancelButton,
-  EditButton,
-  ActionButton
 } from '../../buttons/Buttons';
 
 const ContributionModal = ({ isOpen, onClose, onSave, loading }) => {
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState('DATAMOCK');
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [file, setFile] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
-      setDescription('');
+      setDescription('DATAMOCK');
       setValue('');
       setDate(new Date().toISOString().split('T')[0]);
       setFile(null);
@@ -61,15 +58,7 @@ const ContributionModal = ({ isOpen, onClose, onSave, loading }) => {
           </div>
 
           {/* Descrição */}
-          <div className="form-group mb-3">
-            <label className="text-custom-secondary mb-1">Descrição</label>
-            <input
-              type="text"
-              className="form-control form-control-custom"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
+          
           
           {/* Documento */}
           <div className="form-group mb-4">
