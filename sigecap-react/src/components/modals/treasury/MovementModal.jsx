@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton,
+  EditButton,
+  ActionButton
+} from '../../buttons/Buttons';
 
 const MovementModal = ({ isOpen, onClose, onSave, loading, initialData }) => {
   const [type, setType] = useState('entrada');
@@ -122,9 +129,8 @@ const MovementModal = ({ isOpen, onClose, onSave, loading, initialData }) => {
 
           {/* Ações */}
           <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary">
-            <button type="button" className="btn btn-secondary px-4" onClick={onClose}>
-                Cancelar
-            </button>
+            <CancelButton onClick={onClose} label="Cancelar" />
+  
             <button 
                 type="button" 
                 className={`btn px-4 fw-bold ${type === 'entrada' ? 'btn-success' : 'btn-danger'}`} 

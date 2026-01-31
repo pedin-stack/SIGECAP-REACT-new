@@ -1,4 +1,11 @@
 import React, { useState } from 'react';
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton,
+  EditButton,
+  ActionButton
+} from '../../buttons/Buttons';
 
 const ReportsModal = ({ isOpen, onClose, onGenerate }) => {
   // Estados locais para controlar os inputs de data
@@ -48,13 +55,9 @@ const ReportsModal = ({ isOpen, onClose, onGenerate }) => {
 
           <div className="modal-actions mt-4 d-flex justify-content-end gap-2">
              {/* CORREÇÃO: Usar onClose recebido via props */}
-             <button className="btn-cancel" onClick={onClose}>
-               Cancelar
-             </button>
+             <CancelButton onClick={onClose} label="Cancelar" />
              
-             <button className="btn-confirm" onClick={handleConfirm}>
-               Baixar PDF
-             </button>
+             <ActionButton onClick={handleConfirm} label="Gerar Relatório" />
           </div>
        </div>
     </div>

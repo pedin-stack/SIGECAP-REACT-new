@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton,
+  EditButton,
+  ActionButton
+} from '../../buttons/Buttons';
 
 
 const BalanceModal = ({ 
@@ -28,14 +35,14 @@ const BalanceModal = ({
 
   return (
     <div className="modal-overlay">
-      {/* Usei modal-xl para garantir espaço extra para os botões */}
+     
       <div className="custom-modal modal-xl">
         
         {/* Cabeçalho do Modal e Input de Saldo Inicial */}
         <div className="d-flex justify-content-between align-items-center mb-4">
            <h3 className="fw-bold text-white m-0">Balanço Recente</h3>
            
-           <div className="d-flex align-items-center">
+           <div className="d-flex align-items-center gap-3">
              <label className="me-2 text-white mb-0">Saldo Inicial</label>
              <input
                type="number"
@@ -45,13 +52,7 @@ const BalanceModal = ({
                onChange={(e) => setInitialBalance(e.target.value)}
                style={{ width: '150px' }}
              />
-             <button 
-               type="button" 
-               className="btn btn-confirm ms-2" 
-               onClick={() => onSaveInitialBalance(initialBalance)}
-             >
-               Salvar
-             </button>
+             <CreateButton onClick={() => onSaveInitialBalance(initialBalance)} label='Salvar'/>
            </div>
         </div>
 
@@ -108,20 +109,14 @@ const BalanceModal = ({
                         {/* --- NOVA COLUNA DE AÇÕES --- */}
                         <td className="text-end">
                             <div className="d-flex justify-content-end gap-2">
-                                <button 
-                                  className="btn btn-sm btn-outline-warning text-white" 
-                                  onClick={() => onEditMovement && onEditMovement(m)}
-                                  title="Editar"
-                                >
-                                  Editar
-                                </button>
-                                <button 
-                                  className="btn btn-sm btn-outline-danger" 
-                                  onClick={() => onDeleteMovement && onDeleteMovement(m)}
-                                  title="Excluir"
-                                >
-                                  Excluir
-                                </button>
+                                <EditButton 
+                                  onClick={() => onEditMovement && onEditMovement(m)} 
+                                  label="Editar" 
+                                />
+                                <ExcludeButton 
+                                  onClick={() => onDeleteMovement && onDeleteMovement(m)} 
+                                  label="Excluir" 
+                                />
                             </div>
                         </td>
 
@@ -142,7 +137,7 @@ const BalanceModal = ({
           <div className="text-white fs-5">
             <strong>Total:</strong> <span className={backendTotal !== null ? (backendTotal >= 0 ? 'text-success' : 'text-danger') : 'text-secondary'}>{formattedTotal}</span>
           </div>
-          <button className="btn-cancel" onClick={onClose}>Fechar</button>
+         <CancelButton onClick={onClose} label="Fechar" />
         </div>
 
       </div>
