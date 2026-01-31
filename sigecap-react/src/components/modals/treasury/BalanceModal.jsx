@@ -79,7 +79,8 @@ const BalanceModal = ({
                    const valueStr = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.value || 0);
                    
                    // Lógica de URL do Documento
-                   const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
+                   const apiBase = process.env.REACT_APP_API_BASE_URL ; 
                    const docUrl = m.supportingDoc 
                      ? (m.supportingDoc.startsWith('http') ? m.supportingDoc : `${apiBase}${m.supportingDoc}`) 
                      : null;

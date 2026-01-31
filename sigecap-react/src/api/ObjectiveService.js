@@ -11,8 +11,15 @@ const ObjectiveService = {
   delete: (id) => api.delete(`${BASE}/${id}`),
 
   addContribution: (id, contributionData) => {
-
     return api.post(`${BASE}/${id}/contribution`, contributionData);
+  },
+
+  addContributionWithFile: (id, formData) => {
+    return api.post(`${BASE}/${id}/contribution`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   }
 };
 

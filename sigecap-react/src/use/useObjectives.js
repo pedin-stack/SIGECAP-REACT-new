@@ -149,19 +149,35 @@ export const useObjectives = () => {
         return;
       }
 
-      const payload = {
-        value: parseFloat(formData.value),
-        description: formData.description,
-        date: formData.date ? `${formData.date}T12:00:00` : new Date().toISOString(),
-        type: 'ENTRADA',
-        supportingDoc: formData.file ? formData.file.name : 'sem_comprovante.pdf',
-        responsibleId: responsibleId
-      };
+      if (parseFloat(formData.value) <= 0) throw new Error('O valor deve ser positivo.');
 
-      if (payload.value <= 0) throw new Error('O valor deve ser positivo.');
+      // Se houver arquivo, fazer upload via FormData
+      if (formData.file) {
+        const formDataToSend = new FormData();
+        formDataToSend.append('supportingFile', formData.file);
+        formDataToSend.append('value', String(parseFloat(formData.value)));
+        formDataToSend.append('description', formData.description || 'DATAMOCK');
+        formDataToSend.append('date', formData.date ? new Date(formData.date).toISOString() : new Date().toISOString());
+        formDataToSend.append('type', 'ENTRADA');
+        formDataToSend.append('responsibleId', String(responsibleId));
 
-      const response = await ObjectiveService.addContribution(objectiveId, payload);
-      if (onSuccess) onSuccess(response.data);
+        const response = await ObjectiveService.addContributionWithFile(objectiveId, formDataToSend);
+        if (onSuccess) onSuccess(response.data);
+      } else {
+        // Sem arquivo, enviar JSON normalmente
+        const payload = {
+          value: parseFloat(formData.value),
+          description: formData.description || 'DATAMOCK',
+          date: formData.date ? new Date(formData.date).toISOString() : new Date().toISOString(),
+          type: 'ENTRADA',
+          supportingDoc: '',
+          responsibleId: responsibleId
+        };
+
+        const response = await ObjectiveService.addContribution(objectiveId, payload);
+        if (onSuccess) onSuccess(response.data);
+      }
+
       try { window.dispatchEvent(new CustomEvent('objective:success', { detail: { message: 'Contribuição registrada com sucesso.' } })); } catch(e) {}
       await handleContributionSaved();
     } catch (err) {
