@@ -1,4 +1,11 @@
 import React from 'react';
+import { 
+  ActionButton, 
+  CancelButton,
+  CreateButton,
+  ExcludeButton,
+  EditButton
+} from '../../buttons/Buttons';
 
 const EventDetailModal = ({ 
   isOpen, 
@@ -22,7 +29,6 @@ const EventDetailModal = ({
         {/* Cabeçalho */}
         <div className="d-flex justify-content-between align-items-start mb-3">
           <h2 className="fw-bold text-white m-0">{event.title}</h2>
-          <button className="btn-close btn-close-white" onClick={onClose}></button>
         </div>
 
         {/* Conteúdo */}
@@ -58,31 +64,21 @@ const EventDetailModal = ({
         {/* Ações (Rodapé) */}
         <div className="d-flex justify-content-between align-items-center w-100 mt-4">
           
-          {/* Grupo Esquerda: Editar/Deletar */}
+          {/* Editar/Deletar */}
           <div className="d-flex gap-2">
-            <button 
-                className="btn btn-warning fw-bold px-4 text-nowrap" 
-                onClick={onEdit}
-            >
-                Editar
-            </button>
-            <button 
-                className="btn btn-danger px-4 text-nowrap" 
-                onClick={onDelete}
-            >
-                Deletar
-            </button>
+            <EditButton onClick={onEdit} label="Editar" />
+            <ExcludeButton onClick={onDelete} label="Deletar" />
           </div>
 
           {/* Grupo Direita: Presença/Fechar */}
           <div className="d-flex gap-2 align-items-center">
             
             <button
-              // Adicionei 'text-nowrap' para forçar linha única
-              className={`btn ${userConfirmed ? 'btn-danger' : 'btn-success'} text-nowrap`}
+            
+              className={`btn ${userConfirmed ? 'btn-danger fw-bold' : 'btn-success fw-bold'} text-nowrap`}
               onClick={onToggleAttendance}
               disabled={attendanceLoading}
-              style={{ minWidth: '180px' }} // Garante um tamanho mínimo visualmente agradável
+              style={{ minWidth: '180px' }} 
             >
               {attendanceLoading 
                 ? (
@@ -95,9 +91,7 @@ const EventDetailModal = ({
               }
             </button>
 
-            <button className="btn btn-secondary text-nowrap" onClick={onClose}>
-                Fechar
-            </button>
+            <CancelButton onClick={onClose} label="Fechar" />
           </div>
         </div>
       </div>

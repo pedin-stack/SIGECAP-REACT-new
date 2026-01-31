@@ -1,4 +1,8 @@
 import React from 'react';
+import { 
+  ActionButton, 
+  CancelButton 
+} from '../../buttons/Buttons';
 
 const AttendanceListModal = ({ isOpen, onClose, events, loading, onSelectEvent }) => {
   if (!isOpen) return null;
@@ -31,9 +35,7 @@ const AttendanceListModal = ({ isOpen, onClose, events, loading, onSelectEvent }
                     <td>{ev.date ? (new Date(ev.date)).toLocaleDateString('pt-BR') : '-'}</td>
                     <td>{ev.startTime ? (new Date(ev.startTime)).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                     <td>
-                      <button className="btn btn-sm btn-outline-light" onClick={() => onSelectEvent(ev)}>
-                        Ver Lista
-                      </button>
+                      <ActionButton onClick={() => onSelectEvent(ev)} label="Ver Lista" />
                     </td>
                   </tr>
                 ))
@@ -45,7 +47,7 @@ const AttendanceListModal = ({ isOpen, onClose, events, loading, onSelectEvent }
         </div>
 
         <div className="d-flex justify-content-end">
-          <button className="btn-cancel" onClick={onClose}>Fechar</button>
+          <CancelButton onClick={onClose} label="Fechar" />
         </div>
       </div>
     </div>

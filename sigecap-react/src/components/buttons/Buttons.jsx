@@ -6,7 +6,7 @@ export const CreateButton = ({ onClick, label = "Criar", ...props }) => {
   return (
     <button 
       type="button" 
-      className="btn btn-success" 
+      className="btn btn-success fw-bold" 
       onClick={onClick} 
       {...props}
     >
@@ -20,7 +20,7 @@ export const EditButton = ({ onClick, label = "Editar", ...props }) => {
   return (
     <button 
       type="button" 
-      className="btn btn-warning" 
+      className="btn btn-warning fw-bold" 
       onClick={onClick} 
       {...props}
     >
@@ -34,7 +34,7 @@ export const ExcludeButton = ({ onClick, label = "Excluir", ...props }) => {
   return (
     <button 
       type="button" 
-      className="btn btn-danger" 
+      className="btn btn-danger fw-bold" 
       onClick={onClick} 
       {...props}
     >
@@ -48,7 +48,7 @@ export const CancelButton = ({ onClick, label = "Cancelar", ...props }) => {
   return (
     <button 
       type="button" 
-      className="btn btn-secondary" 
+      className="btn btn-secondary fw-bold" 
       onClick={onClick} 
       {...props}
     >
@@ -70,7 +70,7 @@ export const ActionButton = ({ onClick, label = "Ação", ...props }) => {
   return (
     <button 
       type="button" 
-      className="btn" 
+      className="btn fw-bold" 
       style={customStyle}
       onClick={onClick} 
       {...props}

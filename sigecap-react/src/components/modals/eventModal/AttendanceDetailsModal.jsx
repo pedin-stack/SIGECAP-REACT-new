@@ -1,4 +1,9 @@
 import React from 'react';
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton 
+} from '../../buttons/Buttons';
 
 const AttendanceDetailsModal = ({ isOpen, onClose, event, attendees, loading, onStatusChange }) => {
   if (!isOpen || !event) return null;
@@ -24,13 +29,9 @@ const AttendanceDetailsModal = ({ isOpen, onClose, event, attendees, loading, on
                     </span>
                     <div>
                       {m.status === 'PRESENT' ? (
-                        <button className="btn btn-sm btn-danger ms-2" onClick={() => onStatusChange(m.attendanceId, event.id, m.memberId, 'ABSENT')}>
-                          Marcar Ausente
-                        </button>
+                        <ExcludeButton onClick={() => onStatusChange(m.attendanceId, event.id, m.memberId, 'ABSENT')} label="Marcar ausente" />
                       ) : (
-                        <button className="btn btn-sm btn-success ms-2" onClick={() => onStatusChange(m.attendanceId, event.id, m.memberId, 'PRESENT')}>
-                          Marcar Presente
-                        </button>
+                        <CreateButton onClick={() => onStatusChange(m.attendanceId, event.id, m.memberId, 'PRESENT')} label="Marcar presente" />
                       )}
                     </div>
                   </li>
@@ -43,7 +44,7 @@ const AttendanceDetailsModal = ({ isOpen, onClose, event, attendees, loading, on
         </div>
 
         <div className="d-flex justify-content-end">
-          <button className="btn-cancel" onClick={onClose}>Voltar</button>
+          <CancelButton onClick={onClose} label="Fechar" />
         </div>
       </div>
     </div>

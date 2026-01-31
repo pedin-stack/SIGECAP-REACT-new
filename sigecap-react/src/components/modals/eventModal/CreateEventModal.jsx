@@ -1,4 +1,10 @@
 import React from 'react';
+import { 
+  ActionButton, 
+  CancelButton,
+  CreateButton,
+  ExcludeButton
+} from '../../buttons/Buttons';
 
 const CreateEventModal = ({ isOpen, onClose, data, setData, onSave }) => {
   if (!isOpen) return null;
@@ -51,8 +57,8 @@ const CreateEventModal = ({ isOpen, onClose, data, setData, onSave }) => {
         </div>
 
         <div className="modal-actions">
-          <button className="btn-cancel" onClick={onClose}>Cancelar</button>
-          <button className="btn-confirm" onClick={onSave}>Criar</button>
+        <CancelButton onClick={onClose} label="Cancelar" />
+        <CreateButton onClick={onSave} label="Salvar" />
         </div>
       </div>
     </div>

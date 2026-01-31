@@ -1,4 +1,10 @@
 import React from 'react';
+import { 
+  ActionButton, 
+  CancelButton,
+  CreateButton,
+  ExcludeButton
+} from '../../buttons/Buttons';
 
 const EditEventModal = ({ isOpen, onClose, data, setData, onSave }) => {
   if (!isOpen) return null;
@@ -7,8 +13,7 @@ const EditEventModal = ({ isOpen, onClose, data, setData, onSave }) => {
     <div className="modal-overlay">
       <div className="custom-modal large-modal">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h3 className="fw-bold text-white m-0">Editar Evento</h3>
-          <button className="text-white bg-transparent border-0 fs-3" onClick={onClose}>&times;</button>
+          <h3 className="fw-bold text-white m-0">Editar Evento</h3> 
         </div>
 
         <form className="modal-form" onSubmit={(e) => { e.preventDefault(); onSave(); }}>
@@ -56,8 +61,8 @@ const EditEventModal = ({ isOpen, onClose, data, setData, onSave }) => {
           </div>
 
           <div className="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" className="btn btn-outline-secondary text-white" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn btn-custom fw-bold">Salvar Alterações</button>
+           <CancelButton onClick={onClose} label="Cancelar" />
+            <CreateButton onClick={onSave} label="Salvar Alterações" />
           </div>
         </form>
       </div>
