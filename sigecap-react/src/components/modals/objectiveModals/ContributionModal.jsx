@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton,
+  EditButton,
+  ActionButton
+} from '../../buttons/Buttons';
 
 const ContributionModal = ({ isOpen, onClose, onSave, loading }) => {
   const [description, setDescription] = useState('');
@@ -35,7 +42,7 @@ const ContributionModal = ({ isOpen, onClose, onSave, loading }) => {
         
         <div className="d-flex justify-content-between align-items-center mb-4">
             <h4 className="fw-bold text-white m-0">Nova Contribuição</h4>
-            <button className="btn-close btn-close-white" onClick={onClose}></button>
+
         </div>
 
         <form>
@@ -75,15 +82,8 @@ const ContributionModal = ({ isOpen, onClose, onSave, loading }) => {
           </div>
 
           <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary">
-            <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Cancelar</button>
-            <button 
-                type="button" 
-                className="btn btn-custom fw-bold" 
-                onClick={handleClickSave} 
-                disabled={loading || !value || !description}
-            >
-              {loading ? 'Salvando...' : 'Contribuir'}
-            </button>
+            <CancelButton onClick={onClose} label="Cancelar" />
+            <CreateButton onClick={handleClickSave} label={loading ? "Salvando..." : "Salvar Contribuição"} disabled={loading} />
           </div>
         </form>
       </div>

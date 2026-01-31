@@ -1,4 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton,
+  EditButton,
+  ActionButton
+} from '../../buttons/Buttons';
 
 const CreateObjectiveModal = ({ isOpen, onClose, initialData, createObjective, updateObjective }) => {
   const [description, setDescription] = useState('');
@@ -58,9 +65,9 @@ const CreateObjectiveModal = ({ isOpen, onClose, initialData, createObjective, u
               <input type="number" step="0.01" className="form-control form-control-custom" value={financialGoal} onChange={(e) => setFinancialGoal(e.target.value)} required />
             </div>
           </div>
-          <div className="modal-footer bg-transparent border-0 d-flex justify-content-end">
-            <button type="button" className="btn btn-secondary fw-bold me-2" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn btn-custom fw-bold">Salvar</button>
+          <div className="modal-footer bg-transparent border-0 d-flex justify-content-end gap-2">
+            <CancelButton onClick={onClose} label="Cancelar" />
+            <CreateButton onClick={submit} label="Salvar" />
           </div>
         </form>
       </div>
