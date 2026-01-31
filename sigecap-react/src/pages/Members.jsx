@@ -3,7 +3,6 @@ import Sidebar from '../components/Sidebar';
 import { useMembers, USER_TYPES, OCCUPATIONS } from '../use/UseMembers';
 import  useEvents  from '../use/useEvents';
 
-// Modais
 import MemberFormModal from '../components/modals/members/MemberFormModal';
 import AttendanceListModal from '../components/modals/eventModal/AttendanceListModal';
 import AttendanceDetailsModal from '../components/modals/eventModal/AttendanceDetailsModal';
@@ -12,8 +11,13 @@ import OptionCard from '../components/OptionCard';
 import '../App.css';
 import '../assets/css/Users.css';
 
-
-
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton,
+  EditButton,
+  ActionButton
+} from '../components/buttons/Buttons';
 
 const Members = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -143,12 +147,10 @@ const Members = () => {
           <section className="users-panel animate-fade-in">
             <div className="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-3">
               <div className="d-flex align-items-center gap-3">
-                <button className="btn btn-sm btn-outline-secondary text-white" onClick={() => setCurrentView('menu')}>
-                  &larr; Voltar
-                </button>
+                <CancelButton onClick={() => setCurrentView('menu')} label="Voltar" />
                 <h2 className="card-title mb-0 border-0 p-0">Gerenciamento</h2>
               </div>
-              <button className="btn btn-sm btn-outline-light" onClick={handleCreate}>+ Novo Membro</button>
+             <CreateButton onClick={handleCreate} label="+ Adicionar Membro" />
             </div>
 
             <div className="table-responsive">
@@ -174,8 +176,8 @@ const Members = () => {
                         </span>
                       </td>
                       <td className="actions-cell">
-                        <button className="btn-action btn-edit" onClick={() => handleEdit(user)}>Editar</button>
-                        <button className="btn-action btn-danger-custom" onClick={() => handleDelete(user.id)}>Excluir</button>
+                        <EditButton onClick={() => handleEdit(user)} label="Editar" />
+                        <ExcludeButton onClick={() => handleDelete(user.id)} label="Deletar" />
                       </td>
                     </tr>
                   ))}

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { USER_TYPES, OCCUPATIONS } from '../../../use/UseMembers';
+import { 
+  CreateButton,  
+  ExcludeButton, 
+  CancelButton,
+  EditButton
+} from '../../buttons/Buttons';
 
 const MemberFormModal = ({ isOpen, onClose, onSave, initialData, isEditing }) => {
   const [formData, setFormData] = useState(initialData);
@@ -27,7 +33,6 @@ const MemberFormModal = ({ isOpen, onClose, onSave, initialData, isEditing }) =>
           <h3 className="fw-bold text-white m-0">
             {isEditing ? 'Editar Membro' : 'Novo Membro'}
           </h3>
-          <button className="text-white bg-transparent border-0 fs-3" onClick={onClose}>&times;</button>
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
@@ -107,8 +112,8 @@ const MemberFormModal = ({ isOpen, onClose, onSave, initialData, isEditing }) =>
            </div>
 
            <div className="d-flex justify-content-end gap-2 mt-4">
-             <button type="button" className="btn btn-outline-secondary text-white" onClick={onClose}>Cancelar</button>
-             <button type="submit" className="btn btn-custom fw-bold">Salvar Dados</button>
+            <CancelButton onClick={onClose} label="Cancelar" />
+             <CreateButton type="submit" label={isEditing ? "Salvar Alterações" : "Criar Membro"} />
            </div>
         </form>
       </div>
