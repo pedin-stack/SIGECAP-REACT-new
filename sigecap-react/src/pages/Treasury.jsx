@@ -111,12 +111,12 @@ const Treasury = () => {
               icon={iconExchange} 
               onClick={() => handleOpenEditMovement(null)} 
             />
-        {/*   <OptionCard 
+           <OptionCard 
               title="Gestão de Mensalidades" 
               description="Controle o status de pagamento dos membros." 
               icon={iconInvoice} 
               onClick={() => toggleModal('dues', true)} 
-            />*/}
+            />
             <OptionCard 
               title="Balanço Simples" 
               description="Resumo dos gastos recentes." 

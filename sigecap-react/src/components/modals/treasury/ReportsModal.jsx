@@ -54,7 +54,6 @@ const ReportsModal = ({ isOpen, onClose, onGenerate }) => {
           </div>
 
           <div className="modal-actions mt-4 d-flex justify-content-end gap-2">
-             {/* CORREÇÃO: Usar onClose recebido via props */}
              <CancelButton onClick={onClose} label="Cancelar" />
              
              <ActionButton onClick={handleConfirm} label="Gerar Relatório" />
