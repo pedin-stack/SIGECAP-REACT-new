@@ -24,7 +24,7 @@ const MovementModal = ({ isOpen, onClose, onSave, loading, initialData }) => {
         setType(normalizedType);
         setDescription(initialData.description || '');
         setValue(initialData.value || '');
-        // Formata a data para YYYY-MM-DD se necessário, assumindo que vem ISO
+        // Formata a data para YYYY-MM-DD 
         const formattedDate = initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : '';
         setDate(formattedDate);
         setFile(null); // Arquivo geralmente não vem preenchido por segurança/complexidade
