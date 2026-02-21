@@ -53,6 +53,18 @@ const MonthlyDuesService = {
     }
   }
 
+  ,
+ 
+  manualPayment: async (id, data) => {
+    try {
+      const response = await api.put(`${BASE_URL}/manual-payment/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao registrar pagamento manual para ${id}:`, error);
+      throw error;
+    }
+  }
+
 };
 
 export default MonthlyDuesService;

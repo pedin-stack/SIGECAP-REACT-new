@@ -1,29 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import useManualDues from '../../../use/useManualDues';
+import SuccessModal from '../successModal';
+import ErrorModal from '../errorModal';
 
-const ManualDuesModal = ({ isOpen, onClose, members, onSave }) => {
+const ManualDuesModal = ({ isOpen, onClose }) => {
+  const { members, loading, submitting, statusModal, setStatusModal, loadMembers, manualPay } = useManualDues();
   const [selectedMember, setSelectedMember] = useState('');
-  const [referenceMonth, setReferenceMonth] = useState('Novembro'); // Idealmente dinâmico
+  const [referenceMonth, setReferenceMonth] = useState('Novembro');
   const [value, setValue] = useState('30.00');
+
+  useEffect(() => {
+    if (isOpen) {
+      loadMembers();
+      setSelectedMember('');
+      setReferenceMonth(new Date().toLocaleString('pt-BR', { month: 'long' }).replace(/\b\w/g, c => c.toUpperCase()) || 'Novembro');
+      setValue('30.00');
+    }
+  }, [isOpen, loadMembers]);
 
   if (!isOpen) return null;
 
-  const handleConfirm = () => {
-    // Monta o objeto para enviar ao Hook -> API
+  const handleConfirm = async () => {
     const payload = {
       memberId: selectedMember,
-      month: referenceMonth,
+      referenceMonth: referenceMonth,
       value: parseFloat(value),
-      type: 'INCOMING' // ou 'DUES' dependendo do seu backend
+      type: 'DUES'
     };
-    onSave(payload);
+    await manualPay(payload);
   };
-  
+
+  const closeStatus = () => {
+    const wasSuccess = statusModal?.type === 'success';
+    setStatusModal({ isOpen: false, type: 'success', message: '' });
+    if (wasSuccess) onClose();
+  };
+
   return (
    <div className="modal-overlay" style={{ zIndex: 1060 }}>
       <div className="custom-modal">
-         <h4 className="fw-bold text-white mb-3">Inserir Pagamento</h4>
-         
-         {/* Seleção de Membro */}
+         <h4 className="fw-bold text-white mb-3">Inserir Pagamento Manual</h4>
+
          <div className="form-group mb-3">
             <label className="text-white">Membro</label>
             <select 
@@ -31,7 +48,7 @@ const ManualDuesModal = ({ isOpen, onClose, members, onSave }) => {
               value={selectedMember}
               onChange={(e) => setSelectedMember(e.target.value)}
             >
-               <option value="">Selecione...</option>
+               <option value="">{loading ? 'Carregando...' : 'Selecione...'}</option>
                {members && members.map(member => (
                  <option key={member.id} value={member.id}>
                    {member.name}
@@ -40,7 +57,6 @@ const ManualDuesModal = ({ isOpen, onClose, members, onSave }) => {
             </select>
          </div>
 
-         {/* Mês de Referência */}
          <div className="form-group mb-3">
             <label className="text-white">Mês de Referência</label>
             <select 
@@ -63,29 +79,23 @@ const ManualDuesModal = ({ isOpen, onClose, members, onSave }) => {
             </select>
          </div>
 
-         {/* Valor */}
-         <div className="form-group mb-4">
-            <label className="text-white">Valor (R$)</label>
-            <input 
-              type="number" 
-              className="form-control"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              step="0.01"
-            />
-         </div>
-
-         {/* Ações */}
          <div className="modal-actions d-flex justify-content-end gap-2">
-            {/* CORREÇÃO: Usar onClose ao invés de setShowManualDuesModal que não existe aqui */}
-            <button type="button" className="btn-cancel" onClick={onClose}>
+            <button type="button" className="btn-cancel" onClick={onClose} disabled={submitting}>
               Voltar
             </button>
-            <button type="button" className="btn-confirm" onClick={handleConfirm}>
-              Confirmar
+            <button type="button" className="btn-confirm" onClick={handleConfirm} disabled={!selectedMember || submitting}>
+              {submitting ? 'Processando...' : 'Confirmar'}
             </button>
          </div>
       </div>
+
+      {statusModal?.isOpen && statusModal.type === 'success' && (
+        <SuccessModal isOpen onClose={closeStatus} message={statusModal.message} />
+      )}
+
+      {statusModal?.isOpen && statusModal.type === 'error' && (
+        <ErrorModal isOpen onClose={closeStatus} message={statusModal.message} />
+      )}
    </div>
   );
 };
