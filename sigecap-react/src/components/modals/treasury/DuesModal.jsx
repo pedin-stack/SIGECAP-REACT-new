@@ -8,7 +8,7 @@ import {
   ActionButton
 } from '../../buttons/Buttons';
 
-const DuesModal = ({ isOpen, onClose, onOpenManualEntry }) => {
+const DuesModal = ({ isOpen, onClose, onOpenManualEntry, onPay }) => {
   const { year, setYear, rows, loading, monthNames, refresh } = useMonthlyDues();
 
   if (!isOpen) return null;
@@ -32,7 +32,7 @@ const DuesModal = ({ isOpen, onClose, onOpenManualEntry }) => {
              <button className="btn btn-sm btn-secondary" onClick={() => setYear(year + 1)}>&gt;</button>
            </div>
            <div className='d-flex gap-2'>
-            <CreateButton onClick label="Pagar" />
+            <CreateButton onClick={onPay} label="Pagar" />
              <CancelButton onClick={onClose} label='Fechar' />
            </div>
         </div>

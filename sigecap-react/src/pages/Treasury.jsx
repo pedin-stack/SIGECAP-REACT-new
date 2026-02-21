@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../App.css';
 import '../assets/css/Treasury.css';
@@ -12,6 +12,7 @@ import DuesModal from '../components/modals/treasury/DuesModal';
 import ManualDuesModal from '../components/modals/treasury/ManualDuesModal';
 import BalanceModal from '../components/modals/treasury/BalanceModal';
 import ReportsModal from '../components/modals/treasury/ReportsModal';
+import PaymentModal from '../components/modals/treasury/PaymentModal';
 import OptionCard from '../components/OptionCard';
 
 import ContributionModal from '../components/modals/objectiveModals/ContributionModal';
@@ -30,6 +31,7 @@ import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 
 const Treasury = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const paymentModalRef = useRef(null);
 
   const {
     modals,
@@ -93,6 +95,12 @@ const Treasury = () => {
 
   const iconTarget = (<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle><path d="M22 2 12 12"></path><path d="M16 2h6v6"></path></svg>);
 
+  const handleOpenPaymentModal = () => {
+    if (paymentModalRef.current?.open) {
+      paymentModalRef.current.open();
+    }
+  };
+
 
   return (
     <div className="d-flex bg-custom-main" style={{ minHeight: '100vh' }}>
@@ -143,12 +151,15 @@ const Treasury = () => {
           isOpen={modals.dues} 
           onClose={() => toggleModal('dues', false)} 
           onOpenManualEntry={() => toggleModal('manualDues', true)}
+          onPay={handleOpenPaymentModal}
         />
 
         <ManualDuesModal 
           isOpen={modals.manualDues} 
           onClose={() => toggleModal('manualDues', false)} 
         />
+
+        <PaymentModal ref={paymentModalRef} />
 
           <BalanceModal 
             isOpen={modals.balance} 
