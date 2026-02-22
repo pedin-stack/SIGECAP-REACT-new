@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { USER_TYPES, OCCUPATIONS } from '../../../use/UseMembers';
 import { 
   CreateButton,  
-  ExcludeButton, 
-  CancelButton,
-  EditButton
+  CancelButton
 } from '../../buttons/Buttons';
 
 const MemberFormModal = ({ isOpen, onClose, onSave, initialData, isEditing }) => {

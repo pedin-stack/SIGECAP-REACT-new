@@ -22,7 +22,18 @@ export default function useManualDues() {
       }
 
       const raw = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : []);
-      const list = raw.map((u) => ({ id: u.id ?? u.personId ?? null, name: u.name || (u.person && u.person.name) || u.username || '' }));
+  
+      const isDemolay = (u) => {
+        if (!u) return false;
+        const ut = u.userType || {};
+        const candidates = [ut.description, ut.typeName, ut.name, ut.label, u.type, u.userType?.typeName];
+        return candidates.some(c => typeof c === 'string' && c.toLowerCase() === 'demolay');
+      };
+
+      const list = raw
+        .filter(u => isDemolay(u))
+        .map((u) => ({ id: u.id ?? u.personId ?? null, name: u.name || (u.person && u.person.name) || u.username || '' }));
+
       setMembers(list.filter(m => m && m.id));
     } catch (err) {
       console.error('Erro ao carregar membros ativos', err);
@@ -36,6 +47,19 @@ export default function useManualDues() {
     try {
       if (!payload || !payload.memberId) throw new Error('Membro não informado');
       setSubmitting(true);
+      // Validação extra: garantir que o membro é DEMOLAY antes de enviar
+      try {
+        const user = await UserService.findById(payload.memberId);
+        const ut = user?.userType || {};
+        const isDemolay = [ut.description, ut.typeName, ut.name, ut.label, user?.type].some(c => typeof c === 'string' && c.toLowerCase() === 'demolay');
+        if (!isDemolay) {
+          setStatusModal({ isOpen: true, type: 'error', message: 'Membro não é do tipo DEMOLAY e não pode receber mensalidades.' });
+          return false;
+        }
+      } catch (err) {
+        // Se falhar ao buscar usuário, logamos e continuamos para que o backend valide
+        console.warn('Não foi possível validar tipo de usuário antes do pagamento manual', err);
+      }
       // Chama endpoint de pagamento manual no backend
       await MonthlyDuesService.manualPayment(payload.memberId, payload);
       setStatusModal({ isOpen: true, type: 'success', message: 'Pagamento registrado com sucesso.' });

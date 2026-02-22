@@ -19,7 +19,17 @@ export default function useMonthlyDues(initialYear = new Date().getFullYear()) {
       const rawMember = d.member || {};
       const memberId = rawMember.id || d.memberId || d.member_id || null;
 
+      // Resolve o member completo (pode vir via memberMap quando apenas memberId foi fornecido)
       const member = memberId ? (memberMap.get(String(memberId)) || rawMember) : rawMember;
+
+      // Garantir que o member associado é do tipo DEMOLAY
+      const isDemolayMember = (m) => {
+        if (!m) return false;
+        const ut = m.userType || {};
+        const candidates = [ut.description, ut.typeName, ut.name, ut.label, m.type, m.userType?.typeName];
+        return candidates.some(c => typeof c === 'string' && c.toLowerCase() === 'demolay');
+      };
+      if (!isDemolayMember(member)) return;
       const key = memberId ? String(memberId) : `member-${Math.random()}`;
 
       if (!map.has(key)) {
